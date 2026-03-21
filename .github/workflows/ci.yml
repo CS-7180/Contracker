@@ -34,12 +34,18 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - name: Create .env.test from secrets
+        env:
+          V1: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          V2: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          V3: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          V4: ${{ secrets.RESEND_API_KEY }}
+          V5: ${{ secrets.SENTRY_DSN }}
         run: |
-          echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" >> .env.test
-          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" >> .env.test
-          echo "SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" >> .env.test
-          echo "RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}" >> .env.test
-          echo "SENTRY_DSN=${{ secrets.SENTRY_DSN }}" >> .env.test
+          [ -n "$V1" ] && echo "NEXT_PUBLIC_SUPABASE_URL=$V1" >> .env.test || true
+          [ -n "$V2" ] && echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$V2" >> .env.test || true
+          [ -n "$V3" ] && echo "SUPABASE_SERVICE_ROLE_KEY=$V3" >> .env.test || true
+          [ -n "$V4" ] && echo "RESEND_API_KEY=$V4" >> .env.test || true
+          [ -n "$V5" ] && echo "SENTRY_DSN=$V5" >> .env.test || true
       - run: npm test
 
   build:
