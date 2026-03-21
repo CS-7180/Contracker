@@ -13,11 +13,17 @@
  * Run with: npm test -- m1.0-scaffolding
  */
 
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { existsSync, readFileSync } from 'fs'
 import { join } from 'path'
 import { render, screen } from '@testing-library/react'
 import React from 'react'
+
+// Mock next/navigation so layout components render in jsdom
+vi.mock('next/navigation', () => ({
+  usePathname: vi.fn(() => '/dashboard'),
+  useRouter: vi.fn(() => ({ push: vi.fn(), replace: vi.fn() })),
+}))
 
 const ROOT = process.cwd()
 
@@ -172,11 +178,18 @@ describe('shadcn/ui Components', () => {
     ).toBe(true)
   })
 
-  // 🔲 Render tests activated in the GREEN commit alongside the implementation.
-  //    Vite cannot compile dynamic imports of files that do not yet exist at
-  //    transform time, so these are registered as todo until the file is created.
-  it.todo('🔲 Button component renders without error — activate once button.tsx is created')
-  it.todo('🔲 Button component renders with a non-empty className — activate once button.tsx is created')
+  it('🟢 Button component renders without error', async () => {
+    const { Button } = await import('@/components/ui/button')
+    render(<Button>Click me</Button>)
+    expect(screen.getByRole('button', { name: 'Click me' })).toBeDefined()
+  })
+
+  it('🟢 Button component renders with a non-empty className', async () => {
+    const { Button } = await import('@/components/ui/button')
+    render(<Button>Submit</Button>)
+    const btn = screen.getByRole('button', { name: 'Submit' })
+    expect(btn.className.trim().length).toBeGreaterThan(0)
+  })
 })
 
 // ─────────────────────────────────────────────────────────
@@ -238,13 +251,41 @@ describe('App Layout and Navigation Scaffold', () => {
     ).toContain('motion.div')
   })
 
-  // 🔲 Render tests activated in the GREEN commit alongside the implementation.
-  it.todo('🔲 rendered navigation contains a link to /dashboard — activate once layout.tsx is created')
-  it.todo('🔲 rendered navigation contains a link to /contracts — activate once layout.tsx is created')
-  it.todo('🔲 rendered navigation contains a link to /suppliers — activate once layout.tsx is created')
-  it.todo('🔲 rendered navigation contains a link to /compliance — activate once layout.tsx is created')
-  it.todo('🔲 rendered navigation contains a link to /spend — activate once layout.tsx is created')
-  it.todo('🔲 rendered navigation contains a link to /notifications — activate once layout.tsx is created')
+  it('🟢 rendered navigation contains a link to /dashboard', async () => {
+    const { default: AppLayout } = await import('@/app/(app)/layout')
+    render(<AppLayout><div>page</div></AppLayout>)
+    expect(screen.getByRole('link', { name: /dashboard/i })).toBeDefined()
+  })
+
+  it('🟢 rendered navigation contains a link to /contracts', async () => {
+    const { default: AppLayout } = await import('@/app/(app)/layout')
+    render(<AppLayout><div>page</div></AppLayout>)
+    expect(screen.getByRole('link', { name: /contracts/i })).toBeDefined()
+  })
+
+  it('🟢 rendered navigation contains a link to /suppliers', async () => {
+    const { default: AppLayout } = await import('@/app/(app)/layout')
+    render(<AppLayout><div>page</div></AppLayout>)
+    expect(screen.getByRole('link', { name: /suppliers/i })).toBeDefined()
+  })
+
+  it('🟢 rendered navigation contains a link to /compliance', async () => {
+    const { default: AppLayout } = await import('@/app/(app)/layout')
+    render(<AppLayout><div>page</div></AppLayout>)
+    expect(screen.getByRole('link', { name: /compliance/i })).toBeDefined()
+  })
+
+  it('🟢 rendered navigation contains a link to /spend', async () => {
+    const { default: AppLayout } = await import('@/app/(app)/layout')
+    render(<AppLayout><div>page</div></AppLayout>)
+    expect(screen.getByRole('link', { name: /spend/i })).toBeDefined()
+  })
+
+  it('🟢 rendered navigation contains a link to /notifications', async () => {
+    const { default: AppLayout } = await import('@/app/(app)/layout')
+    render(<AppLayout><div>page</div></AppLayout>)
+    expect(screen.getByRole('link', { name: /notifications/i })).toBeDefined()
+  })
 })
 
 // ─────────────────────────────────────────────────────────
