@@ -31,6 +31,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "framer-motion": "^11.11.9",
+    "geist": "^1.7.0",
     "lucide-react": "^0.460.0",
     "next": "14.2.35",
     "react": "^18.3.1",
