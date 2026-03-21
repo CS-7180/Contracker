@@ -1,9 +1,5 @@
-import type { NextConfig } from 'next'
-
-const nextConfig: NextConfig = {
-  experimental: {
-    serverComponentsExternalPackages: ['@sentry/nextjs'],
-  },
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   images: {
     remotePatterns: [
       {
