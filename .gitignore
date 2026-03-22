@@ -42,6 +42,9 @@ next-env.d.ts
 # Sentry
 .sentryclirc
 
+# Claude Code — local overrides (machine-specific, never commit)
+.claude/settings.local.json
+
 # Editor
 .vscode/
 .idea/
