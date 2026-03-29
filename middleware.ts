@@ -1,12 +1,28 @@
-// TODO: Implement auth middleware (M1.1)
-// Protects all routes under /(app)/* and redirects unauthenticated users to /login
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { updateSession } from '@/lib/supabase/middleware'
 
-export function middleware(request: NextRequest) {
-  return NextResponse.next()
+export async function middleware(request: NextRequest) {
+  const { supabaseResponse, user } = await updateSession(request)
+  const { pathname } = request.nextUrl
+
+  const isAuthPage = pathname === '/login' || pathname === '/signup'
+
+  if (!user && !isAuthPage) {
+    const loginUrl = request.nextUrl.clone()
+    loginUrl.pathname = '/login'
+    return NextResponse.redirect(loginUrl)
+  }
+
+  if (user && isAuthPage) {
+    const dashboardUrl = request.nextUrl.clone()
+    dashboardUrl.pathname = '/dashboard'
+    return NextResponse.redirect(dashboardUrl)
+  }
+
+  return supabaseResponse
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|login|signup).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|api).*)'],
 }
