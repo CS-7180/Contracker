@@ -4,34 +4,53 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    /* ── Page surfaces ── */
+    --background: 210 40% 98%;         /* #F8FAFC — slate-50, enterprise page bg */
+    --foreground: 215 28% 17%;         /* #1E293B — slate-800, primary text */
+
+    /* ── Card / popover surfaces ── */
+    --card: 0 0% 100%;                 /* #FFFFFF — white card surface */
+    --card-foreground: 215 28% 17%;
+
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
+    --popover-foreground: 215 28% 17%;
+
+    /* ── Brand primary — Blue #2563EB ── */
+    --primary: 221 83% 53%;
     --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
+
+    /* ── Secondary / muted ── */
+    --secondary: 214 32% 91%;          /* #E2E8F0 — slate-200 */
+    --secondary-foreground: 215 28% 17%;
+
+    --muted: 210 40% 96%;              /* slate-100 */
+    --muted-foreground: 215 16% 47%;   /* slate-500 */
+
+    /* ── Accent (indigo tint for active states) ── */
+    --accent: 224 76% 95%;             /* indigo-50 */
+    --accent-foreground: 221 83% 43%;  /* indigo-700 */
+
+    /* ── Destructive — Red #DC2626 ── */
+    --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 0.5rem;
-    --sidebar-background: 222.2 84% 4.9%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 221.2 83.2% 53.3%;
+
+    /* ── Border / input / ring ── */
+    --border: 214 32% 91%;             /* #E2E8F0 — slate-200 */
+    --input: 214 32% 91%;
+    --ring: 221 83% 53%;               /* matches primary */
+
+    /* ── Border radius ── */
+    --radius: 0.5rem;                  /* 8px base radius */
+
+    /* ── Sidebar — dark navy #0F172A ── */
+    --sidebar-background: 222 47% 11%;         /* #0F172A — slate-900 */
+    --sidebar-foreground: 210 40% 92%;         /* slate-200 */
+    --sidebar-primary: 221 83% 63%;            /* lighter blue for sidebar */
     --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 217.2 32.6% 17.5%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217.2 32.6% 17.5%;
-    --sidebar-ring: 221.2 83.2% 53.3%;
+    --sidebar-accent: 224 71% 21%;             /* indigo-900 for active bg */
+    --sidebar-accent-foreground: 224 76% 85%;  /* indigo-200 for active text */
+    --sidebar-border: 222 47% 16%;             /* subtle divider */
+    --sidebar-ring: 221 83% 63%;
   }
 }
 
@@ -39,7 +58,15 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Tabular numbers for data columns — prevents layout shift */
+  table,
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
   }
 }

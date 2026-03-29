@@ -3,8 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { motion, useReducedMotion } from 'framer-motion'
-import { Loader2 } from 'lucide-react'
+import { Eye, EyeOff, FileText } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,9 +14,9 @@ export default function LoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const prefersReducedMotion = useReducedMotion()
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -37,47 +36,62 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-muted/40 px-4 py-12">
-      <p className="mb-8 text-2xl font-bold font-display tracking-tight text-foreground">
-        Contracker
-      </p>
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
+      <div className="w-full max-w-sm space-y-6">
+        {/* Brand */}
+        <div className="flex flex-col items-center gap-2">
+          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary">
+            <FileText className="h-5 w-5 text-primary-foreground" />
+          </div>
+          <h1 className="text-2xl font-display font-bold text-foreground tracking-tight">
+            Contracker
+          </h1>
+          <p className="text-sm text-muted-foreground">Contract &amp; Supplier Management</p>
+        </div>
 
-      <motion.div
-        className="w-full max-w-sm"
-        initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.25, ease: 'easeOut' }}
-      >
-        <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="text-lg font-display font-semibold">Sign in to your account</CardTitle>
-            <CardDescription>Enter your credentials to continue</CardDescription>
+        {/* Form card */}
+        <Card className="shadow-sm border-border">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg font-display font-semibold">Sign in</CardTitle>
+            <CardDescription>Enter your credentials to access your workspace</CardDescription>
           </CardHeader>
-          <CardContent className="pb-6">
+          <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
+                  placeholder="you@company.com"
                   autoComplete="email"
-                  placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
                 />
               </div>
-              <div className="space-y-2">
+
+              <div className="space-y-1.5">
                 <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  autoComplete="current-password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
 
               {error && (
@@ -86,21 +100,23 @@ export default function LoginPage() {
                 </p>
               )}
 
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Button type="submit" className="w-full cursor-pointer" disabled={loading}>
                 {loading ? 'Signing in…' : 'Sign in'}
               </Button>
             </form>
 
-            <p className="mt-6 text-center text-sm text-muted-foreground">
+            <p className="mt-4 text-center text-sm text-muted-foreground">
               Don&apos;t have an account?{' '}
-              <Link href="/signup" className="font-medium text-primary underline-offset-4 hover:underline">
+              <Link
+                href="/signup"
+                className="font-medium text-primary underline-offset-4 hover:underline transition-colors"
+              >
                 Sign up
               </Link>
             </p>
           </CardContent>
         </Card>
-      </motion.div>
+      </div>
     </div>
   )
 }

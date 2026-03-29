@@ -39,7 +39,7 @@ describe('Login Page', () => {
     render(<LoginPage />)
 
     expect(screen.getByLabelText(/email/i)).toBeDefined()
-    expect(screen.getByLabelText(/password/i)).toBeDefined()
+    expect(screen.getByLabelText(/^password$/i)).toBeDefined()
     expect(screen.getByRole('button', { name: /sign in/i })).toBeDefined()
   })
 
@@ -57,7 +57,7 @@ describe('Login Page', () => {
     render(<LoginPage />)
 
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'test@example.com' } })
-    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } })
+    fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: 'password123' } })
     fireEvent.click(screen.getByRole('button', { name: /sign in/i }))
 
     await waitFor(() => {
@@ -74,7 +74,7 @@ describe('Login Page', () => {
     render(<LoginPage />)
 
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'test@example.com' } })
-    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } })
+    fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: 'password123' } })
     fireEvent.click(screen.getByRole('button', { name: /sign in/i }))
 
     await waitFor(() => {
@@ -91,7 +91,7 @@ describe('Login Page', () => {
     render(<LoginPage />)
 
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'wrong@example.com' } })
-    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'wrong' } })
+    fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: 'wrong' } })
     fireEvent.click(screen.getByRole('button', { name: /sign in/i }))
 
     await waitFor(() => {

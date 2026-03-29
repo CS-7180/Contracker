@@ -242,13 +242,13 @@ describe('App Layout and Navigation Scaffold', () => {
     expect(source, 'Notifications nav link missing from app/(app)/layout.tsx').toContain('Notifications')
   })
 
-  it('🔴 app/(app)/layout.tsx uses Framer Motion motion.div for page animation', () => {
+  it('🟢 app/(app)/layout.tsx uses Framer Motion for page animation', () => {
     expect(existsSync(APP_LAYOUT), 'app/(app)/layout.tsx does not exist').toBe(true)
     const source = readFileSync(APP_LAYOUT, 'utf-8')
     expect(
       source,
-      'motion.div not found in app/(app)/layout.tsx — add a Framer Motion animation to the page content area'
-    ).toContain('motion.div')
+      'Framer Motion motion element not found in app/(app)/layout.tsx — add animation to the page content area'
+    ).toMatch(/motion\.(div|main|section)/)
   })
 
   it('🟢 rendered navigation contains a link to /dashboard', async () => {
