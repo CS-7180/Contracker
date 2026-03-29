@@ -46,6 +46,7 @@ jobs:
           [ -n "$V3" ] && echo "SUPABASE_SERVICE_ROLE_KEY=$V3" >> .env.test || true
           [ -n "$V4" ] && echo "RESEND_API_KEY=$V4" >> .env.test || true
           [ -n "$V5" ] && echo "SENTRY_DSN=$V5" >> .env.test || true
+          [ -n "$V5" ] && echo "NEXT_PUBLIC_SENTRY_DSN=$V5" >> .env.test || true
       - run: npm test
 
   build:
@@ -55,6 +56,7 @@ jobs:
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
       SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+      NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
