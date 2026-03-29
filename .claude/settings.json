@@ -25,5 +25,42 @@
       "Bash(git branch -d:*)",
       "Bash(git clean -f:*)"
     ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/block-no-verify.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/config-protection.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/typecheck-on-edit.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/console-log-warning.sh"
+          }
+        ]
+      }
+    ]
   }
 }

@@ -5,23 +5,26 @@
 export type ContractStatus = 'active' | 'expiring' | 'expired'
 export type RiskColour = 'green' | 'amber' | 'red'
 
-// TODO: Implement in M2.1 (RED commit in __tests__/lib/risk.test.ts first)
 export function getContractStatus(
   endDate: Date,
   renewalDate: Date,
   noticePeriodDays: number,
   today: Date = new Date()
 ): ContractStatus {
-  throw new Error('Not implemented — write tests first (TDD red commit)')
+  if (endDate < today) return 'expired'
+  if (diffInDays(renewalDate, today) <= noticePeriodDays) return 'expiring'
+  return 'active'
 }
 
-// TODO: Implement in M2.1 (RED commit in __tests__/lib/risk.test.ts first)
 export function getRiskColour(
   renewalDate: Date,
   noticePeriodDays: number,
   today: Date = new Date()
 ): RiskColour {
-  throw new Error('Not implemented — write tests first (TDD red commit)')
+  const daysToRenewal = diffInDays(renewalDate, today)
+  if (daysToRenewal <= noticePeriodDays) return 'red'
+  if (daysToRenewal <= 60) return 'amber'
+  return 'green'
 }
 
 export function diffInDays(dateA: Date, dateB: Date): number {
