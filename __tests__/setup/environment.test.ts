@@ -51,6 +51,13 @@ describe('Required Environment Variables', () => {
       'Missing SENTRY_DSN'
     ).toBeTruthy()
   })
+
+  it('NEXT_PUBLIC_SENTRY_DSN is defined and non-empty', () => {
+    expect(
+      process.env.NEXT_PUBLIC_SENTRY_DSN,
+      'Missing NEXT_PUBLIC_SENTRY_DSN — required for client-side Sentry error capture'
+    ).toBeTruthy()
+  })
 })
 
 describe('Required Package Imports', () => {

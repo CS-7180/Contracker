@@ -167,6 +167,65 @@ describe('CI-Required package.json Scripts', () => {
 })
 
 // ─────────────────────────────────────────────────────────
+// SENTRY ERROR TRACKING                                   🔴
+// ─────────────────────────────────────────────────────────
+describe('Sentry Error Tracking Configuration', () => {
+  it('🔴 sentry.client.config.ts exists', () => {
+    expect(
+      existsSync(join(ROOT, 'sentry.client.config.ts')),
+      'sentry.client.config.ts is missing — create it with Sentry.init({ dsn: process.env.NEXT_PUBLIC_SENTRY_DSN })'
+    ).toBe(true)
+  })
+
+  it('🔴 sentry.client.config.ts initialises Sentry with NEXT_PUBLIC_SENTRY_DSN', () => {
+    const src = readFileSync(join(ROOT, 'sentry.client.config.ts'), 'utf-8')
+    expect(src, 'sentry.client.config.ts must call Sentry.init').toContain('Sentry.init')
+    expect(src, 'sentry.client.config.ts must reference NEXT_PUBLIC_SENTRY_DSN').toContain('NEXT_PUBLIC_SENTRY_DSN')
+  })
+
+  it('🔴 sentry.server.config.ts exists', () => {
+    expect(
+      existsSync(join(ROOT, 'sentry.server.config.ts')),
+      'sentry.server.config.ts is missing — create it with Sentry.init({ dsn: process.env.SENTRY_DSN })'
+    ).toBe(true)
+  })
+
+  it('🔴 sentry.edge.config.ts exists', () => {
+    expect(
+      existsSync(join(ROOT, 'sentry.edge.config.ts')),
+      'sentry.edge.config.ts is missing — create it with Sentry.init({ dsn: process.env.SENTRY_DSN })'
+    ).toBe(true)
+  })
+
+  it('🔴 instrumentation.ts exists and wires server/edge configs via register()', () => {
+    expect(
+      existsSync(join(ROOT, 'instrumentation.ts')),
+      'instrumentation.ts is missing — Next.js 14 App Router requires register() for server/edge Sentry init'
+    ).toBe(true)
+    const src = readFileSync(join(ROOT, 'instrumentation.ts'), 'utf-8')
+    expect(src, 'instrumentation.ts must export a register function').toContain('register')
+    expect(src, 'instrumentation.ts must import sentry.server.config').toContain('sentry.server.config')
+    expect(src, 'instrumentation.ts must import sentry.edge.config').toContain('sentry.edge.config')
+  })
+
+  it('🔴 next.config.mjs wraps the config with withSentryConfig', () => {
+    const src = readFileSync(join(ROOT, 'next.config.mjs'), 'utf-8')
+    expect(
+      src,
+      'next.config.mjs must import withSentryConfig from @sentry/nextjs'
+    ).toContain('withSentryConfig')
+  })
+
+  it('🔴 .env.local.example documents NEXT_PUBLIC_SENTRY_DSN', () => {
+    const src = readFileSync(join(ROOT, '.env.local.example'), 'utf-8')
+    expect(
+      src,
+      '.env.local.example must include NEXT_PUBLIC_SENTRY_DSN for client-side error capture'
+    ).toContain('NEXT_PUBLIC_SENTRY_DSN')
+  })
+})
+
+// ─────────────────────────────────────────────────────────
 // SECURITY: .env.local.example must use placeholders      🔴
 // ─────────────────────────────────────────────────────────
 describe('Security: .env.local.example credentials', () => {
