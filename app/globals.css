@@ -54,40 +54,40 @@
   }
 
   .dark {
-    /* ── Page surfaces ── */
-    --background: 222 47% 7%;            /* #080E1A — deep navy page bg */
-    --foreground: 214 32% 91%;           /* #E2E8F0 — slate-200, primary text */
+    /* ── Page surfaces — zinc charcoal, NOT navy ── */
+    --background: 240 6% 4%;              /* #0a0a0c — zinc-950, pure charcoal */
+    --foreground: 210 20% 92%;            /* #EBF0F5 — crisp near-white */
 
-    /* ── Card / popover surfaces ── */
-    --card: 222 47% 11%;                 /* #0F172A — lifted dark surface */
-    --card-foreground: 214 32% 91%;
+    /* ── Card / popover — elevated charcoal ── */
+    --card: 240 6% 8%;                    /* #131316 — lifted surface */
+    --card-foreground: 210 20% 92%;
 
-    --popover: 222 47% 11%;
-    --popover-foreground: 214 32% 91%;
+    --popover: 240 6% 8%;
+    --popover-foreground: 210 20% 92%;
 
-    /* ── Brand primary — lighter for dark bg readability ── */
-    --primary: 221 83% 63%;              /* indigo-400 */
+    /* ── Brand primary — vivid indigo ── */
+    --primary: 239 84% 67%;               /* #818cf8 — indigo-400 */
     --primary-foreground: 0 0% 100%;
 
     /* ── Secondary / muted ── */
-    --secondary: 215 32% 17%;
-    --secondary-foreground: 214 32% 91%;
+    --secondary: 240 6% 14%;              /* zinc-800 */
+    --secondary-foreground: 210 20% 92%;
 
-    --muted: 215 32% 15%;
-    --muted-foreground: 215 20% 60%;     /* readable mid-gray */
+    --muted: 240 6% 12%;                  /* zinc-850 */
+    --muted-foreground: 215 15% 58%;      /* brighter mid-gray */
 
     /* ── Accent (active states) ── */
-    --accent: 224 71% 18%;
-    --accent-foreground: 214 32% 91%;
+    --accent: 240 6% 14%;
+    --accent-foreground: 210 20% 92%;
 
     /* ── Destructive ── */
-    --destructive: 0 62% 55%;
+    --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 100%;
 
     /* ── Border / input / ring ── */
-    --border: 215 28% 18%;               /* subtle dark divider */
-    --input: 215 32% 14%;
-    --ring: 221 83% 53%;
+    --border: 240 6% 14%;                 /* visible zinc border */
+    --input: 240 6% 12%;
+    --ring: 239 84% 67%;
   }
 }
 
@@ -184,10 +184,47 @@
   }
 }
 
+/* ── Aurora mesh gradient background ── */
+@keyframes aurora-flow {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  25%      { transform: rotate(3deg) scale(1.03); }
+  50%      { transform: rotate(-2deg) scale(1.06); }
+  75%      { transform: rotate(1deg) scale(0.98); }
+}
+
+@layer utilities {
+  .aurora-bg {
+    position: relative;
+    background: #0a0a0f;
+    overflow: hidden;
+  }
+  .aurora-bg::before {
+    content: '';
+    position: absolute;
+    inset: -50%;
+    background:
+      conic-gradient(from 230deg at 51% 52%,
+        rgba(99,102,241,0.35) 0deg,
+        rgba(139,92,246,0.3) 67.5deg,
+        rgba(16,185,129,0.2) 135deg,
+        rgba(59,130,246,0.25) 202.5deg,
+        rgba(168,85,247,0.3) 270deg,
+        rgba(99,102,241,0.35) 360deg
+      );
+    animation: aurora-flow 15s ease-in-out infinite;
+    filter: blur(80px) saturate(1.5);
+    pointer-events: none;
+    z-index: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-shimmer,
   .animate-pulse-ring,
   .animate-badge-pulse {
+    animation: none !important;
+  }
+  .aurora-bg::before {
     animation: none !important;
   }
 }

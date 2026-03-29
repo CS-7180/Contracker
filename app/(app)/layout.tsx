@@ -50,7 +50,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <aside
         className="flex w-64 shrink-0 flex-col text-sidebar-foreground"
         style={{
-          background: 'linear-gradient(180deg, hsl(222 47% 13%) 0%, hsl(222 47% 8%) 100%)',
+          background: 'linear-gradient(180deg, #141418 0%, #0c0c0f 100%)',
         }}
       >
         {/* Brand lockup */}
@@ -79,7 +79,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     className={cn(
                       'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200',
                       isActive
-                        ? 'gradient-border-l bg-white/[0.06] text-sidebar-foreground text-glow-sm'
+                        ? 'gradient-border-l bg-white/[0.08] text-sidebar-foreground text-glow-sm shadow-sm shadow-indigo-500/10'
                         : 'text-sidebar-foreground/50 hover:text-sidebar-foreground/80 hover:bg-white/[0.04]'
                     )}
                   >
@@ -113,7 +113,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Top header — glass effect */}
         <header className="relative flex h-14 items-center justify-between border-b border-white/[0.06] px-6 backdrop-blur-xl"
-          style={{ background: 'hsla(222, 47%, 11%, 0.5)' }}
+          style={{ background: 'rgba(19, 19, 22, 0.6)' }}
         >
           {/* Left: page icon + heading */}
           <div className="flex items-center gap-2.5">
@@ -141,7 +141,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
 
           {/* Bottom gradient glow line */}
-          <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-indigo-500/20 to-transparent" />
+          <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-indigo-500/30 to-transparent" />
         </header>
 
         {/* Animated page content */}
@@ -150,7 +150,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           variants={pageVariants}
           initial="hidden"
           animate="visible"
-          className="flex-1 overflow-auto p-6"
+          className="relative flex-1 overflow-auto p-6"
+          style={{
+            backgroundImage: `
+              radial-gradient(ellipse at 90% 90%, rgba(99,102,241,0.06) 0%, transparent 50%),
+              radial-gradient(ellipse at 10% 10%, rgba(139,92,246,0.04) 0%, transparent 50%)`,
+          }}
         >
           {children}
         </motion.main>
