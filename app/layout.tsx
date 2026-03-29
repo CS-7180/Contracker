@@ -23,7 +23,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${GeistSans.variable} ${jakartaSans.variable}`}
+      className={`dark ${GeistSans.variable} ${jakartaSans.variable}`}
       suppressHydrationWarning
     >
       <body>

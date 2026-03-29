@@ -52,6 +52,43 @@
     --sidebar-border: 222 47% 16%;             /* subtle divider */
     --sidebar-ring: 221 83% 63%;
   }
+
+  .dark {
+    /* ── Page surfaces ── */
+    --background: 222 47% 7%;            /* #080E1A — deep navy page bg */
+    --foreground: 214 32% 91%;           /* #E2E8F0 — slate-200, primary text */
+
+    /* ── Card / popover surfaces ── */
+    --card: 222 47% 11%;                 /* #0F172A — lifted dark surface */
+    --card-foreground: 214 32% 91%;
+
+    --popover: 222 47% 11%;
+    --popover-foreground: 214 32% 91%;
+
+    /* ── Brand primary — lighter for dark bg readability ── */
+    --primary: 221 83% 63%;              /* indigo-400 */
+    --primary-foreground: 0 0% 100%;
+
+    /* ── Secondary / muted ── */
+    --secondary: 215 32% 17%;
+    --secondary-foreground: 214 32% 91%;
+
+    --muted: 215 32% 15%;
+    --muted-foreground: 215 20% 60%;     /* readable mid-gray */
+
+    /* ── Accent (active states) ── */
+    --accent: 224 71% 18%;
+    --accent-foreground: 214 32% 91%;
+
+    /* ── Destructive ── */
+    --destructive: 0 62% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* ── Border / input / ring ── */
+    --border: 215 28% 18%;               /* subtle dark divider */
+    --input: 215 32% 14%;
+    --ring: 221 83% 53%;
+  }
 }
 
 @layer base {
