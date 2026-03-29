@@ -10,6 +10,9 @@ import {
   ShieldCheck,
   DollarSign,
   Bell,
+  Search,
+  Settings,
+  User,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -35,27 +38,37 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     },
   }
 
-  const currentPage =
-    navItems.find((n) => pathname === n.href || pathname.startsWith(n.href + '/'))?.label ??
-    'Contracker'
+  const currentNav = navItems.find(
+    (n) => pathname === n.href || pathname.startsWith(n.href + '/')
+  )
+  const currentPage = currentNav?.label ?? 'Contracker'
+  const CurrentIcon = currentNav?.icon ?? FileText
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       {/* ── Sidebar ── */}
-      <aside className="flex w-64 shrink-0 flex-col bg-sidebar text-sidebar-foreground">
+      <aside
+        className="flex w-64 shrink-0 flex-col text-sidebar-foreground"
+        style={{
+          background: 'linear-gradient(180deg, hsl(222 47% 13%) 0%, hsl(222 47% 8%) 100%)',
+        }}
+      >
         {/* Brand lockup */}
-        <div className="flex h-14 items-center gap-2.5 border-b border-sidebar-border px-5">
-          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary">
-            <FileText className="h-4 w-4 text-primary-foreground" />
+        <div className="flex h-16 items-center gap-3 border-b border-white/[0.06] px-5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/25">
+            <FileText className="h-5 w-5 text-white" />
           </div>
-          <span className="text-base font-display font-semibold tracking-tight text-sidebar-foreground">
+          <span className="text-lg font-display font-bold tracking-tight text-sidebar-foreground text-glow-sm">
             Contracker
           </span>
         </div>
 
+        {/* Gradient separator */}
+        <div className="gradient-line mx-5 mt-3 mb-1" />
+
         {/* Navigation */}
-        <nav className="flex-1 px-3 py-3" aria-label="Main navigation">
-          <ul className="space-y-0.5" role="list">
+        <nav className="flex-1 px-3 py-2" aria-label="Main navigation">
+          <ul className="space-y-1" role="list">
             {navItems.map(({ label, href, icon: Icon }) => {
               const isActive = pathname === href || pathname.startsWith(href + '/')
               return (
@@ -64,13 +77,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     href={href}
                     aria-current={isActive ? 'page' : undefined}
                     className={cn(
-                      'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors duration-150',
+                      'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200',
                       isActive
-                        ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                        : 'text-sidebar-foreground/60 hover:bg-sidebar-border/60 hover:text-sidebar-foreground'
+                        ? 'gradient-border-l bg-white/[0.06] text-sidebar-foreground text-glow-sm'
+                        : 'text-sidebar-foreground/50 hover:text-sidebar-foreground/80 hover:bg-white/[0.04]'
                     )}
                   >
-                    <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    <Icon className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
                     {label}
                   </Link>
                 </li>
@@ -79,15 +92,56 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </ul>
         </nav>
 
-        {/* Footer spacer */}
-        <div className="h-4" />
+        {/* User footer */}
+        <div className="mt-auto border-t border-white/[0.06] px-4 py-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500/20 to-violet-500/20 ring-1 ring-white/[0.12]">
+              <User className="h-4 w-4 text-sidebar-foreground/70" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs font-medium text-sidebar-foreground/80">User</p>
+              <p className="truncate text-[10px] text-sidebar-foreground/40">user@contracker.dev</p>
+            </div>
+            <button className="rounded-md p-1.5 text-sidebar-foreground/40 transition-colors hover:bg-white/[0.06] hover:text-sidebar-foreground/70">
+              <Settings className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
       </aside>
 
       {/* ── Main content ── */}
       <div className="flex flex-1 flex-col overflow-hidden">
-        {/* Top header */}
-        <header className="flex h-14 items-center border-b bg-card px-6">
-          <h1 className="text-sm font-display font-semibold text-foreground">{currentPage}</h1>
+        {/* Top header — glass effect */}
+        <header className="relative flex h-14 items-center justify-between border-b border-white/[0.06] px-6 backdrop-blur-xl"
+          style={{ background: 'hsla(222, 47%, 11%, 0.5)' }}
+        >
+          {/* Left: page icon + heading */}
+          <div className="flex items-center gap-2.5">
+            <CurrentIcon className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+            <h1 className="text-sm font-display font-semibold text-foreground">{currentPage}</h1>
+          </div>
+
+          {/* Right: search, bell, avatar */}
+          <div className="flex items-center gap-1">
+            <button className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-white/[0.06] hover:text-foreground">
+              <Search className="h-4 w-4" />
+            </button>
+            <button className="relative rounded-lg p-2 text-muted-foreground transition-colors hover:bg-white/[0.06] hover:text-foreground">
+              <Bell className="h-4 w-4" />
+              <span
+                className={cn(
+                  'absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-indigo-400',
+                  !shouldReduceMotion && 'animate-badge-pulse'
+                )}
+              />
+            </button>
+            <div className="ml-2 flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500/20 to-violet-500/20 ring-1 ring-white/[0.12]">
+              <User className="h-3.5 w-3.5 text-muted-foreground" />
+            </div>
+          </div>
+
+          {/* Bottom gradient glow line */}
+          <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-indigo-500/20 to-transparent" />
         </header>
 
         {/* Animated page content */}

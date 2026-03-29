@@ -72,29 +72,35 @@ function getThresholdConfig(threshold: NotificationThreshold) {
     return {
       ring: 'ring-2 ring-red-500/40',
       bg: 'bg-red-500/10',
+      glow: 'glow-red',
       icon: AlertTriangle,
-      iconColor: 'text-red-500',
-      badge: 'bg-red-50 text-red-700 border-red-200',
+      iconColor: 'text-red-400',
+      badge: 'bg-red-500/15 text-red-400 border-red-500/30',
       label: 'Critical',
+      pulseRing: true,
     }
   }
   if (threshold === 30) {
     return {
       ring: 'ring-2 ring-amber-500/40',
       bg: 'bg-amber-500/10',
+      glow: 'glow-amber',
       icon: Clock,
-      iconColor: 'text-amber-500',
-      badge: 'bg-amber-50 text-amber-700 border-amber-200',
+      iconColor: 'text-amber-400',
+      badge: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
       label: 'Warning',
+      pulseRing: false,
     }
   }
   return {
-    ring: 'ring-2 ring-green-500/40',
-    bg: 'bg-green-500/10',
+    ring: 'ring-2 ring-emerald-500/40',
+    bg: 'bg-emerald-500/10',
+    glow: 'glow-green',
     icon: TrendingUp,
-    iconColor: 'text-green-500',
-    badge: 'bg-green-50 text-green-700 border-green-200',
+    iconColor: 'text-emerald-400',
+    badge: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
     label: 'Notice',
+    pulseRing: false,
   }
 }
 
@@ -111,7 +117,7 @@ const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.05 },
+    transition: { staggerChildren: 0.06 },
   },
 }
 
@@ -121,9 +127,9 @@ export default function NotificationsPage() {
   const [filter, setFilter] = useState<FilterTab>('all')
 
   const itemVariants = {
-    hidden: { opacity: 0, x: shouldReduceMotion ? 0 : 16 },
-    visible: { opacity: 1, x: 0, transition: { duration: 0.25, ease: 'easeOut' } },
-    exit: { opacity: 0, x: shouldReduceMotion ? 0 : -12, transition: { duration: 0.15 } },
+    hidden: { opacity: 0, x: shouldReduceMotion ? 0 : 20 },
+    visible: { opacity: 1, x: 0, transition: { duration: 0.3, ease: 'easeOut' } },
+    exit: { opacity: 0, x: shouldReduceMotion ? 0 : -16, transition: { duration: 0.2 } },
   }
 
   const filtered = notifications.filter((n) => {
@@ -149,7 +155,9 @@ export default function NotificationsPage() {
       {/* Page header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-display font-bold text-foreground">Notifications</h1>
+          <h1 className="text-2xl font-display font-bold text-foreground text-glow">
+            Notifications
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {unreadCount > 0
               ? `${unreadCount} unread renewal alert${unreadCount === 1 ? '' : 's'}`
@@ -160,30 +168,30 @@ export default function NotificationsPage() {
           <motion.button
             onClick={markAllAsRead}
             whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}
-            className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+            className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-all duration-200 glass hover:text-foreground hover:bg-white/[0.08]"
           >
-            <CheckCheck className="h-4 w-4 text-muted-foreground" />
+            <CheckCheck className="h-4 w-4" />
             Mark all as read
           </motion.button>
         )}
       </div>
 
-      {/* Filter tabs */}
-      <div className="flex gap-1 rounded-xl border border-border bg-card p-1">
+      {/* Filter tabs — glass pill bar */}
+      <div className="flex gap-1 rounded-xl p-1 glass">
         {(['all', 'unread', 'read'] as FilterTab[]).map((tab) => (
           <button
             key={tab}
             onClick={() => setFilter(tab)}
             className={cn(
-              'flex-1 rounded-lg px-4 py-2 text-sm font-medium capitalize transition-all duration-150',
+              'flex-1 rounded-lg px-4 py-2 text-sm font-medium capitalize transition-all duration-200',
               filter === tab
-                ? 'bg-primary text-primary-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground'
+                ? 'bg-gradient-to-r from-indigo-500 to-violet-600 text-white shadow-lg shadow-indigo-500/20'
+                : 'text-muted-foreground hover:text-foreground hover:bg-white/[0.06]'
             )}
           >
             {tab}
             {tab === 'unread' && unreadCount > 0 && (
-              <span className="ml-1.5 rounded-full bg-primary-foreground/20 px-1.5 py-0.5 text-xs font-semibold">
+              <span className="ml-1.5 rounded-full bg-white/20 px-1.5 py-0.5 text-xs font-semibold">
                 {unreadCount}
               </span>
             )}
@@ -194,7 +202,9 @@ export default function NotificationsPage() {
       {/* Notification list */}
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <Bell className="mb-4 h-12 w-12 text-muted-foreground/30" />
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl glass">
+            <Bell className="h-8 w-8 text-muted-foreground/30" />
+          </div>
           <h3 className="text-lg font-display font-semibold text-foreground">All caught up</h3>
           <p className="mt-1 text-sm text-muted-foreground">No renewal alerts in this category.</p>
         </div>
@@ -219,22 +229,31 @@ export default function NotificationsPage() {
                   layout
                   whileHover={shouldReduceMotion ? {} : { scale: 1.005 }}
                   className={cn(
-                    'group relative overflow-hidden rounded-xl border bg-card p-4 transition-shadow duration-150 hover:shadow-md',
+                    'group relative overflow-hidden rounded-xl p-4 transition-all duration-200 glass',
+                    'hover:-translate-y-0.5 hover:bg-white/[0.07] hover:border-white/[0.12]',
+                    'hover:shadow-lg hover:shadow-indigo-500/[0.05]',
                     notification.isRead
-                      ? 'border-border opacity-70'
-                      : 'border-border border-l-4 border-l-primary'
+                      ? 'opacity-60'
+                      : 'gradient-border-l'
                   )}
                 >
                   <div className="flex items-start gap-4">
-                    {/* Traffic-light icon */}
-                    <div
-                      className={cn(
-                        'mt-0.5 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full',
-                        config.bg,
-                        config.ring
+                    {/* Traffic-light icon — with optional pulse ring */}
+                    <div className="relative mt-0.5 flex-shrink-0">
+                      <div
+                        className={cn(
+                          'flex h-12 w-12 items-center justify-center rounded-full',
+                          config.bg,
+                          config.ring,
+                          config.glow
+                        )}
+                      >
+                        <StatusIcon className={cn('h-6 w-6', config.iconColor)} />
+                      </div>
+                      {/* Animated pulse ring for critical + unread */}
+                      {config.pulseRing && !notification.isRead && !shouldReduceMotion && (
+                        <div className="absolute inset-0 rounded-full border-2 border-red-500/40 animate-pulse-ring" />
                       )}
-                    >
-                      <StatusIcon className={cn('h-5 w-5', config.iconColor)} />
                     </div>
 
                     {/* Content */}
@@ -250,7 +269,7 @@ export default function NotificationsPage() {
                           </p>
                         </div>
 
-                        <div className="flex flex-shrink-0 flex-col items-end gap-1">
+                        <div className="flex flex-shrink-0 flex-col items-end gap-1.5">
                           <span
                             className={cn(
                               'rounded-full border px-2 py-0.5 text-xs font-medium',
@@ -259,13 +278,13 @@ export default function NotificationsPage() {
                           >
                             {config.label}
                           </span>
-                          <span className="text-xs text-muted-foreground">
+                          <span className="text-[11px] text-muted-foreground/70">
                             {formatRelativeTime(notification.createdAt)}
                           </span>
                         </div>
                       </div>
 
-                      <p className="mt-2 text-sm text-muted-foreground">
+                      <p className="mt-2.5 text-sm text-muted-foreground">
                         Renewal in{' '}
                         <span className={cn('font-semibold', config.iconColor)}>
                           {notification.daysRemaining} day{notification.daysRemaining === 1 ? '' : 's'}
@@ -280,7 +299,7 @@ export default function NotificationsPage() {
                     <div className="mt-3 flex justify-end">
                       <button
                         onClick={() => markAsRead(notification.id)}
-                        className="flex items-center gap-1 text-xs font-medium text-primary transition-colors hover:text-primary/70"
+                        className="flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium text-indigo-400 transition-all duration-150 hover:bg-indigo-500/10 hover:text-indigo-300"
                       >
                         <CheckCheck className="h-3.5 w-3.5" />
                         Mark as read
@@ -290,7 +309,7 @@ export default function NotificationsPage() {
 
                   {/* Unread indicator dot */}
                   {!notification.isRead && (
-                    <div className="absolute right-4 top-4 h-2 w-2 rounded-full bg-primary" />
+                    <div className="absolute right-4 top-4 h-2 w-2 rounded-full bg-indigo-400 glow-indigo" />
                   )}
                 </motion.li>
               )
