@@ -27,7 +27,6 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
 
   // Soft delete — preserves linked contracts (ON DELETE RESTRICT).
   // Cast needed: Supabase strict generics don't resolve partial Update types correctly.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase.from('suppliers') as any)
     .update({ status: 'inactive' })
     .eq('id', params.id)
