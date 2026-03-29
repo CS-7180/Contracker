@@ -152,7 +152,8 @@ refactor: [description of cleanup]         ← REFACTOR (optional)
 - `docs/ui-conventions.md` — color system, Framer Motion, component scaffolding rules
 
 Deep reference docs:
-- `docs/Contracker_PRD.md` — full PRD: functional requirements, architecture, security, CI/CD
+- `docs/PRD.md` — functional requirements (FR-01–FR-11), architecture, DB schema, API design
+- `docs/IMPLEMENTATION.md` — CI/CD pipeline, sprint plan, milestones, TDD strategy, NFRs, open risks
 - `docs/database-schema.md` — full SQL schema, computed fields, FK behaviors
 - `docs/api-design.md` — all routes, Zod schemas, auth/role patterns
 - `docs/acceptance-criteria.md` — all ACs mapped to test files
@@ -162,7 +163,8 @@ Deep reference docs:
 @docs/security.md            <!-- Zod validation examples, file upload rules, env var list, OWASP A01–A09 checklist -->
 @docs/cicd.md                <!-- branch strategy, PR workflow, Vercel deployment, common tasks, sprint handoff condition -->
 @docs/ui-conventions.md      <!-- traffic-light color system, Framer Motion usage, component scaffolding rules -->
-@docs/Contracker_PRD.md      <!-- full PRD: all functional requirements, architecture overview, sprint milestones, open risks -->
+@docs/PRD.md                 <!-- functional requirements (FR-01–FR-11), architecture, DB schema, API design -->
+@docs/IMPLEMENTATION.md      <!-- CI/CD pipeline, sprint plan, milestones, TDD strategy, NFRs, open risks -->
 @docs/database-schema.md     <!-- full SQL schema for all 5 tables, indexes, FK behaviors, computed field rules -->
 @docs/api-design.md          <!-- all API routes with methods, roles, Zod schemas, auth/role enforcement patterns -->
 @docs/acceptance-criteria.md <!-- all ACs (AC-01 to AC-11) mapped to test files, edge cases for risk.ts -->
