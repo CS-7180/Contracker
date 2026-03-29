@@ -4,34 +4,90 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    /* ── Page surfaces ── */
+    --background: 210 40% 98%;         /* #F8FAFC — slate-50, enterprise page bg */
+    --foreground: 215 28% 17%;         /* #1E293B — slate-800, primary text */
+
+    /* ── Card / popover surfaces ── */
+    --card: 0 0% 100%;                 /* #FFFFFF — white card surface */
+    --card-foreground: 215 28% 17%;
+
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
+    --popover-foreground: 215 28% 17%;
+
+    /* ── Brand primary — Blue #2563EB ── */
+    --primary: 221 83% 53%;
     --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
+
+    /* ── Secondary / muted ── */
+    --secondary: 214 32% 91%;          /* #E2E8F0 — slate-200 */
+    --secondary-foreground: 215 28% 17%;
+
+    --muted: 210 40% 96%;              /* slate-100 */
+    --muted-foreground: 215 16% 47%;   /* slate-500 */
+
+    /* ── Accent (indigo tint for active states) ── */
+    --accent: 224 76% 95%;             /* indigo-50 */
+    --accent-foreground: 221 83% 43%;  /* indigo-700 */
+
+    /* ── Destructive — Red #DC2626 ── */
+    --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 0.5rem;
-    --sidebar-background: 222.2 84% 4.9%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 221.2 83.2% 53.3%;
+
+    /* ── Border / input / ring ── */
+    --border: 214 32% 91%;             /* #E2E8F0 — slate-200 */
+    --input: 214 32% 91%;
+    --ring: 221 83% 53%;               /* matches primary */
+
+    /* ── Border radius ── */
+    --radius: 0.5rem;                  /* 8px base radius */
+
+    /* ── Sidebar — dark navy #0F172A ── */
+    --sidebar-background: 222 47% 11%;         /* #0F172A — slate-900 */
+    --sidebar-foreground: 210 40% 92%;         /* slate-200 */
+    --sidebar-primary: 221 83% 63%;            /* lighter blue for sidebar */
     --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 217.2 32.6% 17.5%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217.2 32.6% 17.5%;
-    --sidebar-ring: 221.2 83.2% 53.3%;
+    --sidebar-accent: 224 71% 21%;             /* indigo-900 for active bg */
+    --sidebar-accent-foreground: 224 76% 85%;  /* indigo-200 for active text */
+    --sidebar-border: 222 47% 16%;             /* subtle divider */
+    --sidebar-ring: 221 83% 63%;
+  }
+
+  .dark {
+    /* ── Page surfaces — zinc charcoal, NOT navy ── */
+    --background: 240 6% 4%;              /* #0a0a0c — zinc-950, pure charcoal */
+    --foreground: 210 20% 92%;            /* #EBF0F5 — crisp near-white */
+
+    /* ── Card / popover — elevated charcoal ── */
+    --card: 240 6% 8%;                    /* #131316 — lifted surface */
+    --card-foreground: 210 20% 92%;
+
+    --popover: 240 6% 8%;
+    --popover-foreground: 210 20% 92%;
+
+    /* ── Brand primary — vivid indigo ── */
+    --primary: 239 84% 67%;               /* #818cf8 — indigo-400 */
+    --primary-foreground: 0 0% 100%;
+
+    /* ── Secondary / muted ── */
+    --secondary: 240 6% 14%;              /* zinc-800 */
+    --secondary-foreground: 210 20% 92%;
+
+    --muted: 240 6% 12%;                  /* zinc-850 */
+    --muted-foreground: 215 15% 58%;      /* brighter mid-gray */
+
+    /* ── Accent (active states) ── */
+    --accent: 240 6% 14%;
+    --accent-foreground: 210 20% 92%;
+
+    /* ── Destructive ── */
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* ── Border / input / ring ── */
+    --border: 240 6% 14%;                 /* visible zinc border */
+    --input: 240 6% 12%;
+    --ring: 239 84% 67%;
   }
 }
 
@@ -39,7 +95,136 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Tabular numbers for data columns — prevents layout shift */
+  table,
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   GLASS COMMAND CENTER — utility layer
+   ══════════════════════════════════════════════════════════════ */
+
+@layer utilities {
+  /* ── Glassmorphism ── */
+  .glass {
+    @apply bg-white/[0.04] border border-white/[0.08];
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  /* ── Gradient left accent bar (3px, inset 8px from top/bottom) ── */
+  .gradient-border-l {
+    position: relative;
+  }
+  .gradient-border-l::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 8px;
+    bottom: 8px;
+    width: 3px;
+    border-radius: 3px;
+    background: linear-gradient(180deg, #818cf8 0%, #a78bfa 100%);
+  }
+
+  /* ── Text glow ── */
+  .text-glow {
+    text-shadow: 0 0 20px rgba(129, 140, 248, 0.3), 0 0 40px rgba(129, 140, 248, 0.1);
+  }
+  .text-glow-sm {
+    text-shadow: 0 0 12px rgba(129, 140, 248, 0.25);
+  }
+
+  /* ── Ambient glow shadows ── */
+  .glow-indigo { box-shadow: 0 0 16px rgba(99, 102, 241, 0.15); }
+  .glow-red    { box-shadow: 0 0 16px rgba(239, 68, 68, 0.2); }
+  .glow-amber  { box-shadow: 0 0 16px rgba(245, 158, 11, 0.15); }
+  .glow-green  { box-shadow: 0 0 16px rgba(16, 185, 129, 0.15); }
+
+  /* ── 1px gradient divider ── */
+  .gradient-line {
+    height: 1px;
+    background: linear-gradient(90deg, rgba(99, 102, 241, 0.4) 0%, transparent 100%);
+  }
+}
+
+/* ── Keyframes ── */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes pulse-ring {
+  0%   { transform: scale(1); opacity: 0.6; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+@keyframes badge-pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.3); }
+}
+
+@layer utilities {
+  .animate-shimmer {
+    background: linear-gradient(90deg, transparent 25%, rgba(255,255,255,0.06) 50%, transparent 75%);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite ease-in-out;
+  }
+  .animate-pulse-ring {
+    animation: pulse-ring 2s infinite ease-out;
+  }
+  .animate-badge-pulse {
+    animation: badge-pulse 2s infinite ease-in-out;
+  }
+}
+
+/* ── Aurora mesh gradient background ── */
+@keyframes aurora-flow {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  25%      { transform: rotate(3deg) scale(1.03); }
+  50%      { transform: rotate(-2deg) scale(1.06); }
+  75%      { transform: rotate(1deg) scale(0.98); }
+}
+
+@layer utilities {
+  .aurora-bg {
+    position: relative;
+    background: #0a0a0f;
+    overflow: hidden;
+  }
+  .aurora-bg::before {
+    content: '';
+    position: absolute;
+    inset: -50%;
+    background:
+      conic-gradient(from 230deg at 51% 52%,
+        rgba(99,102,241,0.35) 0deg,
+        rgba(139,92,246,0.3) 67.5deg,
+        rgba(16,185,129,0.2) 135deg,
+        rgba(59,130,246,0.25) 202.5deg,
+        rgba(168,85,247,0.3) 270deg,
+        rgba(99,102,241,0.35) 360deg
+      );
+    animation: aurora-flow 15s ease-in-out infinite;
+    filter: blur(80px) saturate(1.5);
+    pointer-events: none;
+    z-index: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-shimmer,
+  .animate-pulse-ring,
+  .animate-badge-pulse {
+    animation: none !important;
+  }
+  .aurora-bg::before {
+    animation: none !important;
   }
 }

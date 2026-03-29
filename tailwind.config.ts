@@ -65,7 +65,7 @@ const config: Config = {
       },
       fontFamily: {
         sans: ['var(--font-geist-sans)'],
-        display: ['var(--font-dm-sans)'],
+        display: ['var(--font-jakarta)', 'sans-serif'],
       },
     },
   },

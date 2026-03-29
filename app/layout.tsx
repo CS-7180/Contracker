@@ -1,12 +1,13 @@
 import type { Metadata } from 'next'
 import { GeistSans } from 'geist/font/sans'
-import { DM_Sans } from 'next/font/google'
+import { Plus_Jakarta_Sans } from 'next/font/google'
 import { Toaster } from '@/components/ui/toaster'
 import './globals.css'
 
-const dmSans = DM_Sans({
+const jakartaSans = Plus_Jakarta_Sans({
   subsets: ['latin'],
-  variable: '--font-dm-sans',
+  variable: '--font-jakarta',
+  weight: ['400', '500', '600', '700', '800'],
 })
 
 export const metadata: Metadata = {
@@ -22,7 +23,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${GeistSans.variable} ${dmSans.variable}`}
+      className={`dark ${GeistSans.variable} ${jakartaSans.variable}`}
       suppressHydrationWarning
     >
       <body>
