@@ -7,6 +7,11 @@ node_modules/
 # Testing
 /coverage
 
+# Playwright — auth state (contains session tokens), reports, screenshots
+e2e/.auth/
+playwright-report/
+test-results/
+
 # Next.js
 /.next/
 /out/
