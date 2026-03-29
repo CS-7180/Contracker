@@ -44,20 +44,20 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 py-12">
-      <p className="mb-8 text-2xl font-semibold font-display tracking-tight text-foreground">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-muted/40 px-4 py-12">
+      <p className="mb-8 text-2xl font-bold font-display tracking-tight text-foreground">
         Contracker
       </p>
 
       <motion.div
         className="w-full max-w-sm"
-        initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
+        initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.25, ease: 'easeOut' }}
       >
         <Card>
           <CardHeader className="text-center">
-            <CardTitle className="text-xl font-display">Create your account</CardTitle>
+            <CardTitle className="text-lg font-display font-semibold">Create your account</CardTitle>
             <CardDescription>Get started with Contracker</CardDescription>
           </CardHeader>
           <CardContent className="pb-6">
