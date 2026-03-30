@@ -156,20 +156,6 @@ test.describe('AC-03-1 — Create contract happy path', () => {
 test.describe('Client-side date validation', () => {
   test.skip(!hasAuth, 'E2E_EMAIL not configured — add to .env.test to enable')
 
-  let supplierId: string
-
-  test.beforeAll(async ({ request }) => {
-    const res = await request.post('/api/suppliers', {
-      data: { name: 'E2E Validation Supplier' },
-    })
-    const body = await res.json()
-    supplierId = body.data?.id
-  })
-
-  test.afterAll(async ({ request }) => {
-    if (supplierId) await request.delete(`/api/suppliers/${supplierId}`)
-  })
-
   test('end_date before start_date shows error and stays on page', async ({ page }) => {
     await page.goto('/contracts/new')
     await page.getByLabel(/contract name/i).fill('Date Validation Test')

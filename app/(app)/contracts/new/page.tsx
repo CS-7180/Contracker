@@ -47,13 +47,21 @@ export default function NewContractPage() {
     e.preventDefault()
     setError(null)
 
-    // Client-side date validation
-    if (form.start_date && form.end_date && form.end_date < form.start_date) {
+    // Client-side validation
+    if (!form.start_date || !form.end_date || !form.renewal_date) {
+      setError('Please fill in all date fields with a valid date (YYYY-MM-DD)')
+      return
+    }
+    if (form.end_date < form.start_date) {
       setError('End date must be on or after start date')
       return
     }
-    if (form.end_date && form.renewal_date && form.renewal_date > form.end_date) {
+    if (form.renewal_date > form.end_date) {
       setError('Renewal date must be on or before end date')
+      return
+    }
+    if (!form.supplier_id) {
+      setError('Please select a supplier')
       return
     }
 

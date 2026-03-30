@@ -80,8 +80,10 @@ export async function POST(req: Request) {
 
   const result = contractSchema.safeParse(body)
   if (!result.success) {
+    const err = result.error.errors[0]
+    const field = err.path.length > 0 ? `${err.path[0]}: ` : ''
     return NextResponse.json(
-      { data: null, error: { message: result.error.errors[0].message, code: '400' } },
+      { data: null, error: { message: `${field}${err.message}`, code: '400' } },
       { status: 400 }
     )
   }
