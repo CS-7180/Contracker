@@ -274,7 +274,7 @@ test.describe('PDF upload — AC-03-5 (non-PDF rejected)', () => {
       buffer: bigBuffer,
     })
 
-    await expect(page.getByText(/10\s*mb|size limit/i)).toBeVisible()
+    await expect(page.getByText(/exceeds the 10 mb size limit/i)).toBeVisible()
     await expect(page).toHaveURL(/\/contracts\/new/)
   })
 })
