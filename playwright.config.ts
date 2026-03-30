@@ -54,6 +54,17 @@ export default defineConfig({
       },
       dependencies: ['setup'],
     },
+
+    // Contract page tests (authenticated + unauthenticated redirect)
+    {
+      name: 'contract-pages',
+      testMatch: /contracts\.spec\.ts/,
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: 'e2e/.auth/user.json',
+      },
+      dependencies: ['setup'],
+    },
   ],
 
   // Automatically start the Next.js dev server
