@@ -1,9 +1,12 @@
 /**
  * CONTRACT PAGES — Playwright E2E
- * Issue #10 [M1.3]
+ * Issue #10 [M1.3] — contract create form
+ * Issue #11 [M1.3] — PDF upload
  *
  * Acceptance Criteria covered:
  *   AC-03-1: Valid form submission creates a DB record with all submitted fields
+ *   AC-03-4: PDF under 10MB uploaded → pdf_url stored and accessible
+ *   AC-03-5: Non-PDF file upload → rejected with error message
  *   AC-03-2: renewal_date within notice_period_days → status = 'expiring' (unit tests)
  *   AC-03-3: end_date in the past → status = 'expired' (unit tests)
  *   AC-03-6: Member calling DELETE → 403 (unit tests)
@@ -16,6 +19,7 @@
 
 import { test, expect } from '@playwright/test'
 import fs from 'fs'
+import path from 'path'
 
 const hasAuth = (() => {
   try {
@@ -176,5 +180,101 @@ test.describe('Client-side date validation', () => {
     await page.getByRole('button', { name: /create contract/i }).click()
     await expect(page).toHaveURL(/\/contracts\/new/)
     await expect(page.getByText(/renewal date must be on or before end date/i)).toBeVisible()
+  })
+})
+
+// ─── PDF upload — AC-03-4 and AC-03-5 ────────────────────────────────────────
+
+test.describe('PDF upload — AC-03-4 (valid PDF)', () => {
+  test.skip(!hasAuth, 'E2E_EMAIL not configured — add to .env.test to enable')
+
+  let supplierId: string
+  let createdContractId: string | null = null
+
+  test.beforeAll(async ({ request }) => {
+    const res = await request.post('/api/suppliers', {
+      data: { name: 'E2E PDF Upload Supplier', category: 'E2E Testing' },
+    })
+    const body = await res.json()
+    supplierId = body.data?.id
+  })
+
+  test.afterAll(async ({ request }) => {
+    if (createdContractId) {
+      await request.delete(`/api/contracts/${createdContractId}`)
+    }
+    if (supplierId) {
+      await request.delete(`/api/suppliers/${supplierId}`)
+    }
+  })
+
+  test('attach PDF → submit → contract has pdf_url set in DB (AC-03-4)', async ({ page, request }) => {
+    const contractName = `E2E PDF Contract ${Date.now()}`
+    const pdfFixture = path.resolve('e2e/fixtures/test.pdf')
+
+    await page.goto('/contracts/new')
+
+    await page.getByLabel(/contract name/i).fill(contractName)
+    await page.getByRole('combobox', { name: /contract type/i }).click()
+    await page.getByRole('option', { name: /service/i }).click()
+    await page.getByRole('combobox', { name: /supplier/i }).click()
+    await page.getByRole('option', { name: 'E2E PDF Upload Supplier' }).click()
+    await page.getByLabel(/start date/i).fill('2025-01-01')
+    await page.getByLabel(/end date/i).fill('2026-01-01')
+    await page.getByLabel(/renewal date/i).fill('2025-10-01')
+
+    // Attach the PDF fixture
+    await page.getByLabel(/contract pdf/i).setInputFiles(pdfFixture)
+
+    await page.getByRole('button', { name: /create contract/i }).click()
+
+    // Should redirect to the contract detail page
+    await expect(page).toHaveURL(/\/contracts\/[0-9a-f-]+$/, { timeout: 10000 })
+
+    // Save ID for cleanup
+    const url = page.url()
+    const match = url.match(/\/contracts\/([0-9a-f-]+)$/)
+    if (match) createdContractId = match[1]
+
+    // Verify pdf_url is stored via API
+    const res = await request.get('/api/contracts')
+    const body = await res.json()
+    const found = body.data?.find((c: { name: string; pdf_url: string | null }) => c.name === contractName)
+    expect(found).toBeDefined()
+    expect(found.pdf_url).not.toBeNull()
+  })
+})
+
+test.describe('PDF upload — AC-03-5 (non-PDF rejected)', () => {
+  test.skip(!hasAuth, 'E2E_EMAIL not configured — add to .env.test to enable')
+
+  test('attach non-PDF file → client error shown, stays on page (AC-03-5)', async ({ page }) => {
+    await page.goto('/contracts/new')
+
+    // Create a .txt file buffer in memory and set it as a file upload
+    await page.getByLabel(/contract pdf/i).setInputFiles({
+      name: 'document.txt',
+      mimeType: 'text/plain',
+      buffer: Buffer.from('not a pdf'),
+    })
+
+    // Client-side validation should reject immediately — error visible without submitting
+    await expect(page.getByText(/only pdf files/i)).toBeVisible()
+    await expect(page).toHaveURL(/\/contracts\/new/)
+  })
+
+  test('attach file over 10 MB → client error shown, stays on page', async ({ page }) => {
+    await page.goto('/contracts/new')
+
+    // Create a 11 MB in-memory "PDF" (MIME = pdf but oversized)
+    const bigBuffer = Buffer.alloc(11 * 1024 * 1024, 0)
+    await page.getByLabel(/contract pdf/i).setInputFiles({
+      name: 'big.pdf',
+      mimeType: 'application/pdf',
+      buffer: bigBuffer,
+    })
+
+    await expect(page.getByText(/10\s*mb|size limit/i)).toBeVisible()
+    await expect(page).toHaveURL(/\/contracts\/new/)
   })
 })
