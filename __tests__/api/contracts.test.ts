@@ -254,13 +254,9 @@ describe('POST /api/contracts/[id]/upload', () => {
   function makeUploadReq(file: File | null, id = 'contract-1') {
     const formData = new FormData()
     if (file) formData.append('pdf', file)
-    return {
-      req: new Request(`http://localhost/api/contracts/${id}/upload`, {
-        method: 'POST',
-        body: formData,
-      }),
-      params: { id },
-    }
+    // Mock formData() directly — multipart streaming hangs in Node.js test env
+    const req = { formData: vi.fn().mockResolvedValue(formData) } as unknown as Request
+    return { req, params: { id } }
   }
 
   it('returns 401 when not authenticated', async () => {
