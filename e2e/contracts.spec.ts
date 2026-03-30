@@ -58,9 +58,10 @@ test.describe('Create contract form — /contracts/new', () => {
 
   test('sidebar navigation is visible', async ({ page }) => {
     await page.goto('/contracts/new')
-    await expect(page.locator('aside')).toBeVisible()
+    const sidebar = page.locator('aside')
+    await expect(sidebar).toBeVisible()
     for (const label of ['Dashboard', 'Contracts', 'Suppliers', 'Compliance', 'Spend', 'Notifications']) {
-      await expect(page.getByRole('link', { name: label })).toBeVisible()
+      await expect(sidebar.getByRole('link', { name: label, exact: true })).toBeVisible()
     }
   })
 
