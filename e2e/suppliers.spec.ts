@@ -49,7 +49,8 @@ test.describe('Suppliers list — /suppliers', () => {
   test('renders page heading and New Supplier button', async ({ page }) => {
     await page.goto('/suppliers')
 
-    await expect(page.getByRole('heading', { name: 'Suppliers' })).toBeVisible()
+    // Layout adds h1 "Suppliers" in the top bar; page has h2 — target the page-level heading
+    await expect(page.getByRole('heading', { name: 'Suppliers', level: 2 })).toBeVisible()
     await expect(page.getByRole('link', { name: /new supplier/i })).toBeVisible()
   })
 
