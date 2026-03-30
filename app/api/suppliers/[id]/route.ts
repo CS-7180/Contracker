@@ -4,12 +4,19 @@ import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { requireAdmin } from '@/lib/auth'
 
+// Empty strings for optional fields are treated as "not provided"
+const emptyToUndefined = z.preprocess((v) => (v === '' ? undefined : v), z.string().optional())
+const emptyToUndefinedEmail = z.preprocess(
+  (v) => (v === '' ? undefined : v),
+  z.string().email().optional()
+)
+
 const supplierUpdateSchema = z.object({
   name: z.string().min(1).optional(),
-  contact_name: z.string().optional(),
-  contact_email: z.string().email().optional(),
-  contact_phone: z.string().optional(),
-  category: z.string().optional(),
+  contact_name: emptyToUndefined,
+  contact_email: emptyToUndefinedEmail,
+  contact_phone: emptyToUndefined,
+  category: emptyToUndefined,
 })
 
 export async function GET(_req: Request, { params }: { params: { id: string } }) {

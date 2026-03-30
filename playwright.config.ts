@@ -6,6 +6,7 @@ dotenv.config({ path: path.resolve(__dirname, '.env.test') })
 
 export default defineConfig({
   testDir: './e2e',
+  globalSetup: require.resolve('./e2e/global-setup'),
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
@@ -36,6 +37,17 @@ export default defineConfig({
     {
       name: 'app-pages',
       testMatch: /smoke\/app\.spec\.ts/,
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: 'e2e/.auth/user.json',
+      },
+      dependencies: ['setup'],
+    },
+
+    // Supplier page tests (authenticated + unauthenticated redirect)
+    {
+      name: 'supplier-pages',
+      testMatch: /suppliers\.spec\.ts/,
       use: {
         ...devices['Desktop Chrome'],
         storageState: 'e2e/.auth/user.json',
