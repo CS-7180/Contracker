@@ -8,14 +8,23 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
-export default function NewSupplierPage() {
+type Supplier = {
+  id: string
+  name: string
+  contact_name: string | null
+  contact_email: string | null
+  contact_phone: string | null
+  category: string | null
+}
+
+export default function SupplierEditForm({ supplier }: { supplier: Supplier }) {
   const router = useRouter()
   const [form, setForm] = useState({
-    name: '',
-    contact_name: '',
-    contact_email: '',
-    contact_phone: '',
-    category: '',
+    name: supplier.name,
+    contact_name: supplier.contact_name ?? '',
+    contact_email: supplier.contact_email ?? '',
+    contact_phone: supplier.contact_phone ?? '',
+    category: supplier.category ?? '',
   })
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -25,20 +34,20 @@ export default function NewSupplierPage() {
     setLoading(true)
     setError(null)
 
-    const res = await fetch('/api/suppliers', {
-      method: 'POST',
+    const res = await fetch(`/api/suppliers/${supplier.id}`, {
+      method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(form),
     })
 
     const body = await res.json()
     if (!res.ok) {
-      setError(body.error?.message ?? 'Failed to create supplier')
+      setError(body.error?.message ?? 'Failed to update supplier')
       setLoading(false)
       return
     }
 
-    router.push('/suppliers')
+    router.push(`/suppliers/${supplier.id}`)
   }
 
   function field(key: keyof typeof form) {
@@ -49,19 +58,17 @@ export default function NewSupplierPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <Button asChild variant="ghost" size="sm" className="text-muted-foreground">
-        <Link href="/suppliers">
+        <Link href={`/suppliers/${supplier.id}`}>
           <ArrowLeft className="mr-1.5 h-4 w-4" />
-          Back to Suppliers
+          Back to Supplier
         </Link>
       </Button>
 
       <div>
         <h2 className="text-2xl font-display font-bold tracking-tight text-foreground text-glow">
-          New Supplier
+          Edit Supplier
         </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Add a new supplier to your portfolio
-        </p>
+        <p className="mt-1 text-sm text-muted-foreground">{supplier.name}</p>
       </div>
 
       <form
@@ -130,10 +137,10 @@ export default function NewSupplierPage() {
 
         <div className="flex justify-end gap-3 pt-2">
           <Button asChild variant="outline" type="button">
-            <Link href="/suppliers">Cancel</Link>
+            <Link href={`/suppliers/${supplier.id}`}>Cancel</Link>
           </Button>
           <Button type="submit" disabled={loading}>
-            {loading ? 'Creating…' : 'Create Supplier'}
+            {loading ? 'Saving…' : 'Save Changes'}
           </Button>
         </div>
       </form>
