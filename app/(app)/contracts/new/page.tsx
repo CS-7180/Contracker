@@ -33,6 +33,8 @@ export default function NewContractPage() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [pdfFile, setPdfFile] = useState<File | null>(null)
+  const [pdfError, setPdfError] = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/suppliers')
@@ -84,7 +86,44 @@ export default function NewContractPage() {
       return
     }
 
-    router.push(`/contracts/${body.data.id}`)
+    const contractId = body.data.id
+
+    if (pdfFile) {
+      const fd = new FormData()
+      fd.append('pdf', pdfFile)
+      const uploadRes = await fetch(`/api/contracts/${contractId}/upload`, {
+        method: 'POST',
+        body: fd,
+      })
+      if (!uploadRes.ok) {
+        const uploadBody = await uploadRes.json()
+        setPdfError(uploadBody.error?.message ?? 'PDF upload failed — contract saved without PDF')
+      }
+    }
+
+    router.push(`/contracts/${contractId}`)
+  }
+
+  function handlePdfChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setPdfError(null)
+    const file = e.target.files?.[0] ?? null
+    if (!file) {
+      setPdfFile(null)
+      return
+    }
+    if (file.type !== 'application/pdf') {
+      setPdfError('Only PDF files are accepted')
+      e.target.value = ''
+      setPdfFile(null)
+      return
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setPdfError('File exceeds the 10 MB size limit')
+      e.target.value = ''
+      setPdfFile(null)
+      return
+    }
+    setPdfFile(file)
   }
 
   function field(key: keyof typeof form) {
@@ -249,6 +288,21 @@ export default function NewContractPage() {
             onChange={field('category')}
             placeholder="e.g. Technology, Facilities"
           />
+        </div>
+
+        {/* PDF Upload */}
+        <div className="space-y-2">
+          <Label htmlFor="pdf">Contract PDF <span className="text-muted-foreground">(optional, PDF only, max 10 MB)</span></Label>
+          <Input
+            id="pdf"
+            type="file"
+            accept=".pdf,application/pdf"
+            onChange={handlePdfChange}
+            className="cursor-pointer file:mr-3 file:cursor-pointer file:rounded file:border-0 file:bg-primary/10 file:px-3 file:py-1 file:text-sm file:font-medium"
+          />
+          {pdfError && (
+            <p className="text-sm text-red-400">{pdfError}</p>
+          )}
         </div>
 
         {error && (
