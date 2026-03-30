@@ -42,6 +42,17 @@ export default defineConfig({
       },
       dependencies: ['setup'],
     },
+
+    // Supplier page tests (authenticated + unauthenticated redirect)
+    {
+      name: 'supplier-pages',
+      testMatch: /suppliers\.spec\.ts/,
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: 'e2e/.auth/user.json',
+      },
+      dependencies: ['setup'],
+    },
   ],
 
   // Automatically start the Next.js dev server
