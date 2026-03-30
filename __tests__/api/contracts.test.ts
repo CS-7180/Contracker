@@ -240,3 +240,92 @@ describe('DELETE /api/contracts/[id]', () => {
   it.todo('deletes contract and returns 200 when called by Admin')
   it.todo('returns 401 when not authenticated')
 })
+
+// ─── POST /api/contracts/[id]/upload ─────────────────────────────────────────
+// Issue #11 [M1.3] — AC-03-4, AC-03-5
+//
+// TDD RED 🔴 — these tests FAIL until the upload route is implemented.
+
+import { POST as uploadPdf } from '@/app/api/contracts/[id]/upload/route'
+
+describe('POST /api/contracts/[id]/upload', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  function makeUploadReq(file: File | null, id = 'contract-1') {
+    const formData = new FormData()
+    if (file) formData.append('pdf', file)
+    return {
+      req: new Request(`http://localhost/api/contracts/${id}/upload`, {
+        method: 'POST',
+        body: formData,
+      }),
+      params: { id },
+    }
+  }
+
+  it('returns 401 when not authenticated', async () => {
+    mockCreateClient.mockReturnValue({ ...authClient(null), from: vi.fn(), storage: { from: vi.fn() } } as any)
+    const file = new File(['%PDF-1.0'], 'test.pdf', { type: 'application/pdf' })
+    const { req, params } = makeUploadReq(file)
+    const res = await uploadPdf(req, { params })
+    expect(res.status).toBe(401)
+  })
+
+  it('returns 400 when no file is attached', async () => {
+    mockCreateClient.mockReturnValue({ ...authClient('user-1'), from: vi.fn(), storage: { from: vi.fn() } } as any)
+    const { req, params } = makeUploadReq(null)
+    const res = await uploadPdf(req, { params })
+    expect(res.status).toBe(400)
+    const body = await res.json()
+    expect(body.error.message).toMatch(/no file/i)
+  })
+
+  it('returns 400 when file is not a PDF (AC-03-5)', async () => {
+    mockCreateClient.mockReturnValue({ ...authClient('user-1'), from: vi.fn(), storage: { from: vi.fn() } } as any)
+    const file = new File(['hello'], 'doc.txt', { type: 'text/plain' })
+    const { req, params } = makeUploadReq(file)
+    const res = await uploadPdf(req, { params })
+    expect(res.status).toBe(400)
+    const body = await res.json()
+    expect(body.error.message).toMatch(/pdf/i)
+  })
+
+  it('returns 400 when file exceeds 10 MB', async () => {
+    mockCreateClient.mockReturnValue({ ...authClient('user-1'), from: vi.fn(), storage: { from: vi.fn() } } as any)
+    const bigBuffer = new Uint8Array(11 * 1024 * 1024)
+    const file = new File([bigBuffer], 'big.pdf', { type: 'application/pdf' })
+    const { req, params } = makeUploadReq(file)
+    const res = await uploadPdf(req, { params })
+    expect(res.status).toBe(400)
+    const body = await res.json()
+    expect(body.error.message).toMatch(/10\s*mb|size/i)
+  })
+
+  it('uploads valid PDF and returns 200 with pdf_url (AC-03-4)', async () => {
+    const storageMock = {
+      upload: vi.fn().mockResolvedValue({ data: { path: 'some-uuid.pdf' }, error: null }),
+    }
+    const qb = {
+      update: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockResolvedValue({ error: null }),
+    }
+    mockCreateClient.mockReturnValue({
+      ...authClient('user-1'),
+      from: vi.fn().mockReturnValue(qb),
+      storage: { from: vi.fn().mockReturnValue(storageMock) },
+    } as any)
+
+    const file = new File(['%PDF-1.0'], 'contract.pdf', { type: 'application/pdf' })
+    const { req, params } = makeUploadReq(file)
+    const res = await uploadPdf(req, { params })
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.data.pdf_url).toBeTruthy()
+    expect(body.error).toBeNull()
+    expect(storageMock.upload).toHaveBeenCalledWith(
+      expect.stringMatching(/\.pdf$/),
+      expect.any(File),
+      { contentType: 'application/pdf' }
+    )
+  })
+})
