@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
+import { getContractStatus, getRiskColour } from '@/lib/risk'
 
 // Empty strings for optional fields are treated as "not provided"
 const emptyToUndefined = z.preprocess((v) => (v === '' ? undefined : v), z.string().optional())
@@ -54,7 +55,14 @@ export async function GET(_req: Request) {
     )
   }
 
-  return NextResponse.json({ data: contracts, error: null })
+  // Cast needed: Supabase strict generics don't resolve row types correctly.
+  const enriched = (contracts as any[]).map((c) => ({
+    ...c,
+    status: getContractStatus(new Date(c.end_date), new Date(c.renewal_date), c.notice_period_days),
+    risk_colour: getRiskColour(new Date(c.renewal_date), c.notice_period_days),
+  }))
+
+  return NextResponse.json({ data: enriched, error: null })
 }
 
 export async function POST(req: Request) {
