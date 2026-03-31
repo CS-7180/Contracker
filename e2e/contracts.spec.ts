@@ -388,6 +388,119 @@ test.describe('Contract detail page — /contracts/[id]', () => {
   })
 })
 
+// ─── Contract list — unauthenticated redirect ─────────────────────────────────
+// Issue #15 [M2.0] — AC-04
+
+test.describe('Contract list — unauthenticated redirect', () => {
+  test.use({ storageState: { cookies: [], origins: [] } })
+
+  test('GET /contracts → /login', async ({ page }) => {
+    await page.goto('/contracts')
+    await expect(page).toHaveURL(/\/login/)
+  })
+})
+
+// ─── Contract list page — authenticated ──────────────────────────────────────
+// AC-04-1: All contracts render with name, supplier, status badge, renewal date, value
+// AC-04-2: Search term → only matching contracts shown
+// AC-04-3: Status filter 'expiring' → only expiring contracts shown
+// AC-04-4: > 20 contracts → only 20 shown and pagination controls visible
+
+test.describe('Contract list — /contracts', () => {
+  test.skip(!hasAuth, 'E2E_EMAIL not configured — add to .env.test to enable')
+
+  let supplierId: string
+  let contractId: string
+
+  test.beforeAll(async ({ request }) => {
+    const sRes = await request.post('/api/suppliers', {
+      data: { name: 'E2E List Supplier', category: 'E2E Testing' },
+    })
+    supplierId = (await sRes.json()).data?.id
+
+    const cRes = await request.post('/api/contracts', {
+      data: {
+        name: 'E2E List Contract',
+        type: 'service',
+        supplier_id: supplierId,
+        start_date: '2025-01-01',
+        end_date: '2027-01-01',
+        renewal_date: '2026-10-01',
+        notice_period_days: 30,
+        value: 9999,
+        category: 'Technology',
+      },
+    })
+    contractId = (await cRes.json()).data?.id
+  })
+
+  test.afterAll(async ({ request }) => {
+    if (contractId) await request.delete(`/api/contracts/${contractId}`)
+    if (supplierId) await request.delete(`/api/suppliers/${supplierId}`)
+  })
+
+  test('renders heading "Contracts" (level 2)', async ({ page }) => {
+    await page.goto('/contracts')
+    await expect(page.getByRole('heading', { name: /^contracts$/i, level: 2 })).toBeVisible()
+  })
+
+  test('dark theme applied', async ({ page }) => {
+    await page.goto('/contracts')
+    await expect(page.locator('html')).toHaveClass(/\bdark\b/)
+  })
+
+  test('sidebar navigation is visible', async ({ page }) => {
+    await page.goto('/contracts')
+    const sidebar = page.locator('aside')
+    await expect(sidebar).toBeVisible()
+    for (const label of ['Dashboard', 'Contracts', 'Suppliers', 'Compliance', 'Spend', 'Notifications']) {
+      await expect(sidebar.getByRole('link', { name: label, exact: true })).toBeVisible()
+    }
+  })
+
+  test('renders "New Contract" button linking to /contracts/new', async ({ page }) => {
+    await page.goto('/contracts')
+    const newBtn = page.getByRole('link', { name: /new contract/i })
+    await expect(newBtn).toBeVisible()
+    await expect(newBtn).toHaveAttribute('href', '/contracts/new')
+  })
+
+  test('renders table column headers — name, supplier, renewal date, value, status (AC-04-1)', async ({ page }) => {
+    await page.goto('/contracts')
+    await expect(page.getByRole('columnheader', { name: /name/i })).toBeVisible()
+    await expect(page.getByRole('columnheader', { name: /supplier/i })).toBeVisible()
+    await expect(page.getByRole('columnheader', { name: /renewal/i })).toBeVisible()
+    await expect(page.getByRole('columnheader', { name: /value/i })).toBeVisible()
+    await expect(page.getByRole('columnheader', { name: /status/i })).toBeVisible()
+  })
+
+  test('shows the test contract with supplier and status badge (AC-04-1)', async ({ page }) => {
+    await page.goto('/contracts')
+    await expect(page.getByRole('link', { name: /e2e list contract/i })).toBeVisible()
+    await expect(page.getByText(/e2e list supplier/i)).toBeVisible()
+    await expect(page.getByText(/active|expiring|expired/i).first()).toBeVisible()
+  })
+
+  test('search input filters contracts by name — updates URL with search param (AC-04-2)', async ({ page }) => {
+    await page.goto('/contracts')
+    await page.getByPlaceholder(/search/i).fill('E2E List Contract')
+    await page.getByRole('button', { name: /^search$/i }).click()
+    await page.waitForURL(/search=E2E/)
+    await expect(page.getByRole('link', { name: /e2e list contract/i })).toBeVisible()
+  })
+
+  test('status filter updates URL with status param (AC-04-3)', async ({ page }) => {
+    await page.goto('/contracts')
+    await page.getByLabel(/^status$/i).selectOption('active')
+    await page.waitForURL(/status=active/)
+    await expect(page).toHaveURL(/status=active/)
+  })
+
+  test.fixme('pagination controls visible when > 20 contracts (AC-04-4)', async () => {
+    // Needs seed data with > 20 contracts — to be covered by manual test or seed expansion
+  })
+})
+
 // ─── Contract edit page — authenticated ──────────────────────────────────────
 // Issue #12 — AC: edit form pre-fills all existing values, PUT → redirect to detail
 
