@@ -64,11 +64,11 @@ npx supabase db reset  # Reset and re-seed database
 | `app/api/contracts/route.ts` | POST handler | Role checks + validation — wrong = security vulnerability |
 | `app/api/contracts/[id]/route.ts` | DELETE handler | Admin-only enforcement — wrong = unauthorized deletion |
 
-### Test Files
+### Commits (TDD sequence — never skip)
 ```
-__tests__/lib/risk.test.ts, alerts.test.ts
-__tests__/api/contracts.test.ts, suppliers.test.ts
-e2e/contracts.spec.ts
+test: add failing tests for [feature]      ← RED
+feat: implement [feature] to pass tests    ← GREEN
+refactor: [description of cleanup]         ← REFACTOR (optional)
 ```
 
 ## Do's and Don'ts
@@ -76,26 +76,19 @@ e2e/contracts.spec.ts
 ### Do
 - **DO** write the test commit before the implementation commit — always separate
 - **DO** inject `today: Date = new Date()` in any function that computes from current date
-- **DO** compute `status` and `risk_colour` in the application layer after fetching from DB
+- **DO** compute `status` and `risk_colour` in the application layer, never store in DB
 - **DO** validate all API inputs with Zod before touching the database
-- **DO** check `supabase.auth.getUser()` on every API route — session can expire
-- **DO** check role from `profiles` table server-side for any Admin-only operation
+- **DO** check `supabase.auth.getUser()` + role from `profiles` on every API route
 - **DO** use `{ data, error }` response shape consistently across all API routes
-- **DO** use signed URLs with 15-minute expiry for any Supabase Storage file access
-- **DO** use UUID-based filenames for uploaded PDFs
-- **DO** use `new Date().toISOString().split('T')[0]` when inserting DATE fields to Supabase
-- **DO** rely on `idx_notifications_unique` as the sole deduplication mechanism — no code-level guards
+- **DO** use signed URLs (15-min expiry) for Supabase Storage; UUID-based filenames for PDFs
+- **DO** use `new Date().toISOString().split('T')[0]` when inserting DATE fields
+- **DO** rely on `idx_notifications_unique` as the sole deduplication mechanism
 
 ### Don't
-- **DON'T** store `status`, `risk_colour`, or certification `status` in the database
 - **DON'T** filter contracts by `status` in SQL — compute in app layer, then filter
-- **DON'T** combine test writing + implementation in a single commit
 - **DON'T** expose `SUPABASE_SERVICE_ROLE_KEY` or `RESEND_API_KEY` to the client bundle
-- **DON'T** use public Supabase Storage URLs — always private bucket + signed URLs
-- **DON'T** rely on client-side role gates for security — server is the sole authority
 - **DON'T** hard-delete suppliers — soft delete only (`status = 'inactive'`)
 - **DON'T** delete a supplier with active contracts — `ON DELETE RESTRICT` will throw
-- **DON'T** store timestamps for dates — all date fields are `DATE` type
 - **DON'T** accept non-PDF files or files over 10MB in upload routes
 
 ## Coding Conventions
@@ -119,13 +112,6 @@ e2e/contracts.spec.ts
 - Database columns: `snake_case`
 - Branch names: `feature/[issue-number]-short-description`
 
-### Commits (TDD sequence — never skip)
-```
-test: add failing tests for [feature]      ← RED
-feat: implement [feature] to pass tests    ← GREEN
-refactor: [description of cleanup]         ← REFACTOR (optional)
-```
-
 ### Zod Schemas
 - Define schemas at module top-level (not inline inside the handler)
 - Use `.regex(/^\d{4}-\d{2}-\d{2}$/)` for all date string fields
@@ -133,50 +119,9 @@ refactor: [description of cleanup]         ← REFACTOR (optional)
 
 ## Playwright UI Testing Protocol
 
-**Every issue labelled `ui` must include Playwright E2E tests before the PR is opened.**
+See `docs/playwright-protocol.md` for the full Playwright E2E testing checklist, structure template, and gotchas.
 
-### What to cover on every UI feature
-
-| Check | What to assert |
-|---|---|
-| Unauthenticated redirect | Navigate without session → redirected to `/login` (tests middleware) |
-| Page renders | Heading (use `level: 2` — layout also renders `h1`), key buttons/links, no error boundary |
-| Dark theme | `expect(page.locator('html')).toHaveClass(/\bdark\b/)` |
-| Sidebar navigation | All 6 nav links visible on every authenticated page |
-| Acceptance Criteria | Each AC in the GitHub issue maps to at least one Playwright assertion |
-| Form validation | Empty required field → submit → still on same URL |
-| Happy-path submission | Fill valid data → submit → assert redirect AND DB row visible |
-| DB side-effects | After create/update/delete, re-navigate or query Supabase to confirm the change persisted |
-| Navigation flows | Back buttons, cancel links, breadcrumbs navigate to correct URLs |
-| Empty state | When no data exists, assert empty-state UI — not a blank page, not an error |
-
-### Test structure template
-
-```typescript
-// Unauthenticated — no session needed
-test.describe('Feature — unauthenticated redirect', () => {
-  test.use({ storageState: { cookies: [], origins: [] } })
-  test('GET /page → /login', async ({ page }) => { ... })
-})
-
-// Authenticated — skip when E2E_EMAIL not set in .env.test
-test.describe('Feature — authenticated', () => {
-  test.skip(!hasAuth, 'E2E_EMAIL not configured — add to .env.test')
-  test('renders heading and key elements', async ({ page }) => { ... })
-  test('happy path: submit → redirects → data visible', async ({ page }) => { ... })
-})
-
-// Needs seed data — mark fixme until ready
-test.describe('Detail/edit', () => {
-  test.fixme('renders pre-populated data', async () => {})
-})
-```
-
-### Gotchas
-- **Heading selector** — layout renders `<h1>PageName</h1>` in the top bar AND page has `<h2>`. Always use `getByRole('heading', { name: '...', level: 2 })`.
-- **No `test.todo()` inside describe** — throws in Playwright 1.x. Use `test.fixme()` instead.
-- **Each feature area gets its own project** in `playwright.config.ts` with `storageState` and `dependencies: ['setup']`.
-- **E2E test user** — `e2e@contracker.dev` (role: admin) in Supabase. Add `E2E_EMAIL` + `E2E_PASSWORD` to `.env.test` to run authenticated tests.
+@docs/playwright-protocol.md
 
 ## Key Gotchas
 
@@ -193,26 +138,23 @@ test.describe('Detail/edit', () => {
 
 ## Reference Documents
 
-- `docs/architecture.md` — status computation, traffic-light logic, RBAC pattern, project structure
-- `docs/security.md` — Zod validation, file upload rules, env vars, OWASP checklist
-- `docs/cicd.md` — branch strategy, PR workflow, deployment, common tasks, sprint handoff
-- `docs/ui-conventions.md` — color system, Framer Motion, component scaffolding rules
-
-Deep reference docs:
-- `docs/PRD.md` — functional requirements (FR-01–FR-11), architecture, DB schema, API design
-- `docs/IMPLEMENTATION.md` — CI/CD pipeline, sprint plan, milestones, TDD strategy, NFRs, open risks
-- `docs/database-schema.md` — full SQL schema, computed fields, FK behaviors
-- `docs/api-design.md` — all routes, Zod schemas, auth/role patterns
-- `docs/acceptance-criteria.md` — all ACs mapped to test files
-- `docs/sprint-plan.md` — sprint milestones, handoff conditions, cut priorities
-
-@docs/architecture.md        <!-- status computation, traffic-light logic, RBAC pattern, alert deduplication, project directory tree -->
-@docs/security.md            <!-- Zod validation examples, file upload rules, env var list, OWASP A01–A09 checklist -->
-@docs/cicd.md                <!-- branch strategy, PR workflow, Vercel deployment, common tasks, sprint handoff condition -->
-@docs/ui-conventions.md      <!-- traffic-light color system, Framer Motion usage, component scaffolding rules -->
-@docs/PRD.md                 <!-- functional requirements (FR-01–FR-11), architecture, DB schema, API design -->
+@docs/architecture.md        <!-- status computation, traffic-light logic, RBAC, project structure -->
+@docs/security.md            <!-- Zod validation, file upload rules, env vars, OWASP checklist -->
+@docs/cicd.md                <!-- branch strategy, PR workflow, deployment, sprint handoff -->
+@docs/ui-conventions.md      <!-- color system, Framer Motion, component scaffolding -->
+@docs/PRD.md                 <!-- functional requirements FR-01–FR-11, architecture, DB schema, API design -->
 @docs/IMPLEMENTATION.md      <!-- CI/CD pipeline, sprint plan, milestones, TDD strategy, NFRs, open risks -->
-@docs/database-schema.md     <!-- full SQL schema for all 5 tables, indexes, FK behaviors, computed field rules -->
-@docs/api-design.md          <!-- all API routes with methods, roles, Zod schemas, auth/role enforcement patterns -->
-@docs/acceptance-criteria.md <!-- all ACs (AC-01 to AC-11) mapped to test files, edge cases for risk.ts -->
-@docs/sprint-plan.md         <!-- sprint milestones M1.0–M3.4, owners, due dates, cut priority order -->
+@docs/database-schema.md     <!-- full SQL schema, computed fields, FK behaviors -->
+@docs/api-design.md          <!-- all routes, Zod schemas, auth/role patterns -->
+@docs/acceptance-criteria.md <!-- all ACs (AC-01–AC-11) mapped to test files -->
+@docs/sprint-plan.md         <!-- sprint milestones M1.0–M3.4, cut priorities -->
+
+## Sprint 2 → Sprint 3 Handoff (Raj → Vineela)
+
+Sprint 2 is complete. Issues #15–#18 are all merged to `main`. CI green. Production live at https://contracker.vercel.app.
+
+**What's done:** Auth, supplier CRUD, contract CRUD + PDF upload, contract list with search/filter/sort/pagination, risk library (`lib/risk.ts`), dashboard API (`GET /api/dashboard`), and dashboard UI with live stat cards and expiring-soon list.
+
+**Vineela picks up Sprint 3** starting with the issues for email alerts, spend tracking, compliance/certification tracking, and member invitation — see `docs/sprint-plan.md` M3.0–M3.4 for the full checklist.
+
+**APIs for Sprint 3 still needed:** `GET /api/spend`, `GET/POST/PUT/DELETE /api/certifications`, `POST /api/team/invite`, `PUT /api/team/[id]`. All follow the same auth → role → Zod → DB → `{ data, error }` pattern in `docs/api-design.md`.
