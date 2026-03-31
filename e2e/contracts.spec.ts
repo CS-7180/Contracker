@@ -446,10 +446,12 @@ test.describe('Contract edit page — /contracts/[id]/edit', () => {
 
   test('valid edit → submit → redirects to detail page (AC)', async ({ page, request }) => {
     await page.goto(`/contracts/${contractId}/edit`)
-    // Wait for pre-fill, then update name
+    // Wait for the specific pre-filled value to confirm useEffect has settled
     const nameInput = page.getByLabel(/contract name/i)
-    await expect(nameInput).not.toHaveValue('')
+    await expect(nameInput).toHaveValue('E2E Edit Contract')
     await nameInput.fill('E2E Edit Contract Updated')
+    // Confirm React state updated before submitting
+    await expect(nameInput).toHaveValue('E2E Edit Contract Updated')
 
     await page.getByRole('button', { name: /save changes/i }).click()
 
