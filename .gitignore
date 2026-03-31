@@ -11,6 +11,8 @@ node_modules/
 e2e/.auth/
 playwright-report/
 test-results/
+.playwright-mcp/
+test-*.png
 
 # Next.js
 /.next/
