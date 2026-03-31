@@ -238,7 +238,7 @@ describe('GET /api/contracts', () => {
 //
 // TDD RED 🔴 — these tests FAIL until GET is implemented (currently 501).
 
-import { GET as getContract, PUT as putContract } from '@/app/api/contracts/[id]/route'
+import { GET as getContract, PUT as putContract, DELETE as deleteContract } from '@/app/api/contracts/[id]/route'
 
 const mockContractWithSupplier = {
   ...mockContract,
@@ -399,11 +399,66 @@ describe('PUT /api/contracts/[id]', () => {
 })
 
 // ─── DELETE /api/contracts/:id ────────────────────────────────────────────────
+// Issue #13 [M1.3]
+//
+// TDD RED 🔴 → GREEN 🟢 — DELETE is already implemented; these tests are TDD catch-up.
+// AC-01-3: Member DELETE → 403
+// AC-01-4: Admin DELETE → 200
 
 describe('DELETE /api/contracts/[id]', () => {
-  it.todo('returns 403 when called by a Member role user')
-  it.todo('deletes contract and returns 200 when called by Admin')
-  it.todo('returns 401 when not authenticated')
+  beforeEach(() => vi.clearAllMocks())
+
+  it('returns 401 when not authenticated', async () => {
+    mockCreateClient.mockReturnValue({
+      ...authClient(null),
+      from: vi.fn(),
+    } as any)
+
+    const req = new Request('http://localhost/api/contracts/contract-1', { method: 'DELETE' })
+    const res = await deleteContract(req, { params: { id: 'contract-1' } })
+    expect(res.status).toBe(401)
+  })
+
+  it('returns 403 when called by a Member role user (AC-01-3)', async () => {
+    const profilesQb = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({ data: { role: 'member' }, error: null }),
+    }
+    mockCreateClient.mockReturnValue({
+      ...authClient('user-1'),
+      from: vi.fn().mockReturnValue(profilesQb),
+    } as any)
+
+    const req = new Request('http://localhost/api/contracts/contract-1', { method: 'DELETE' })
+    const res = await deleteContract(req, { params: { id: 'contract-1' } })
+    expect(res.status).toBe(403)
+  })
+
+  it('deletes contract and returns 200 when called by Admin (AC-01-4)', async () => {
+    const profilesQb = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({ data: { role: 'admin' }, error: null }),
+    }
+    const contractsQb = {
+      delete: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockResolvedValue({ error: null }),
+    }
+    mockCreateClient.mockReturnValue({
+      ...authClient('user-1'),
+      from: vi.fn().mockImplementation((table: string) =>
+        table === 'profiles' ? profilesQb : contractsQb
+      ),
+    } as any)
+
+    const req = new Request('http://localhost/api/contracts/contract-1', { method: 'DELETE' })
+    const res = await deleteContract(req, { params: { id: 'contract-1' } })
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.data.id).toBe('contract-1')
+    expect(body.error).toBeNull()
+  })
 })
 
 // ─── POST /api/contracts/[id]/upload ─────────────────────────────────────────
