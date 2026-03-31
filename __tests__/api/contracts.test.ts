@@ -494,7 +494,7 @@ describe('GET /api/contracts — query params', () => {
   function makeQb(data: unknown[]) {
     return {
       select: vi.fn().mockReturnThis(),
-      or: vi.fn().mockReturnThis(),
+      ilike: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
       order: vi.fn().mockResolvedValue({ data, error: null }),
     }
@@ -523,13 +523,13 @@ describe('GET /api/contracts — query params', () => {
     notice_period_days: 30,
   }
 
-  it('passes search term to Supabase or() for name/supplier filtering (AC-04-2)', async () => {
+  it('passes search term to Supabase ilike() for contract name filtering (AC-04-2)', async () => {
     const qb = makeQb([mockContract])
     mockCreateClient.mockReturnValue({ ...authClient('user-1'), from: vi.fn().mockReturnValue(qb) } as any)
 
     const res = await getContracts(new Request('http://localhost/api/contracts?search=support'))
     expect(res.status).toBe(200)
-    expect(qb.or).toHaveBeenCalledWith(expect.stringContaining('support'))
+    expect(qb.ilike).toHaveBeenCalledWith('name', '%support%')
   })
 
   it('filters by status in application layer — returns only expiring contracts (AC-04-3)', async () => {

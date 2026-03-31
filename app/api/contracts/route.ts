@@ -55,7 +55,7 @@ export async function GET(req: Request) {
 
   // Cast needed: Supabase strict generics don't resolve builder types correctly.
   let query = (supabase.from('contracts') as any).select('*, suppliers(id, name)')
-  if (search)      query = query.or(`name.ilike.%${search}%,suppliers.name.ilike.%${search}%`)
+  if (search)      query = query.ilike('name', `%${search}%`)
   if (supplierId)  query = query.eq('supplier_id', supplierId)
   if (category)    query = query.eq('category', category)
   if (type)        query = query.eq('type', type)

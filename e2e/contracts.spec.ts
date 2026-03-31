@@ -481,7 +481,7 @@ test.describe('Contract list — /contracts', () => {
     await expect(page.getByText(/active|expiring|expired/i).first()).toBeVisible()
   })
 
-  test('search input filters contracts by name — updates URL with search param (AC-04-2)', async ({ page }) => {
+  test('search input filters contracts by name (AC-04-2)', async ({ page }) => {
     await page.goto('/contracts')
     await page.getByPlaceholder(/search/i).fill('E2E List Contract')
     await page.getByRole('button', { name: /^search$/i }).click()
