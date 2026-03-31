@@ -15,6 +15,7 @@ import {
   Settings,
   User,
   LogOut,
+  Sparkles,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -27,6 +28,16 @@ const navItems = [
   { label: 'Spend',         href: '/spend',         icon: DollarSign },
   { label: 'Notifications', href: '/notifications', icon: Bell },
 ]
+
+// Icon accent colours per nav item for the active icon wrapper
+const NAV_ACCENT: Record<string, { bg: string; text: string; glow: string }> = {
+  '/dashboard':     { bg: 'from-indigo-500/30 to-violet-500/20',   text: 'text-indigo-300',  glow: 'rgba(99,102,241,0.4)' },
+  '/contracts':     { bg: 'from-blue-500/30 to-cyan-500/20',       text: 'text-blue-300',    glow: 'rgba(59,130,246,0.4)' },
+  '/suppliers':     { bg: 'from-violet-500/30 to-purple-500/20',   text: 'text-violet-300',  glow: 'rgba(139,92,246,0.4)' },
+  '/compliance':    { bg: 'from-emerald-500/30 to-teal-500/20',    text: 'text-emerald-300', glow: 'rgba(16,185,129,0.4)' },
+  '/spend':         { bg: 'from-amber-500/30 to-orange-500/20',    text: 'text-amber-300',   glow: 'rgba(245,158,11,0.4)' },
+  '/notifications': { bg: 'from-rose-500/30 to-pink-500/20',       text: 'text-rose-300',    glow: 'rgba(244,63,94,0.4)' },
+}
 
 function SidebarUserFooter() {
   const router = useRouter()
@@ -55,32 +66,37 @@ function SidebarUserFooter() {
     : user?.email?.[0]?.toUpperCase() ?? 'U'
 
   return (
-    <div className="mt-auto border-t border-white/[0.06] px-4 py-3">
-      <div className="flex items-center gap-3">
-        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500/30 to-violet-500/30 ring-1 ring-white/[0.15] text-xs font-bold text-indigo-300">
-          {initials}
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-xs font-medium text-sidebar-foreground/80">
-            {user?.full_name ?? user?.email?.split('@')[0] ?? 'User'}
-          </p>
-          <p className="truncate text-[10px] text-sidebar-foreground/40">{user?.email ?? ''}</p>
-        </div>
-        <div className="flex items-center gap-0.5">
-          <Link
-            href="/settings/team"
-            className="rounded-md p-1.5 text-sidebar-foreground/40 transition-colors hover:bg-white/[0.06] hover:text-sidebar-foreground/70"
-            title="Settings"
-          >
-            <Settings className="h-3.5 w-3.5" />
-          </Link>
-          <button
-            onClick={handleLogout}
-            className="rounded-md p-1.5 text-sidebar-foreground/40 transition-colors hover:bg-red-500/10 hover:text-red-400"
-            title="Sign out"
-          >
-            <LogOut className="h-3.5 w-3.5" />
-          </button>
+    <div className="mt-auto flex-shrink-0">
+      {/* Gradient divider line */}
+      <div className="mx-4 h-px bg-gradient-to-r from-transparent via-indigo-500/20 to-transparent mb-3" />
+      <div className="px-4 pb-4">
+        <div className="flex items-center gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-white/[0.04]">
+          {/* Avatar — full gradient */}
+          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-xs font-bold text-white shadow-md shadow-indigo-500/30 ring-1 ring-white/20">
+            {initials}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-xs font-semibold text-sidebar-foreground/90">
+              {user?.full_name ?? user?.email?.split('@')[0] ?? 'User'}
+            </p>
+            <p className="truncate text-[10px] text-sidebar-foreground/40">{user?.email ?? ''}</p>
+          </div>
+          <div className="flex items-center gap-0.5">
+            <Link
+              href="/settings/team"
+              className="rounded-md p-1.5 text-sidebar-foreground/30 transition-all hover:bg-white/[0.06] hover:text-sidebar-foreground/70"
+              title="Settings"
+            >
+              <Settings className="h-3.5 w-3.5" />
+            </Link>
+            <button
+              onClick={handleLogout}
+              className="rounded-md p-1.5 text-sidebar-foreground/30 transition-all hover:bg-red-500/15 hover:text-red-400"
+              title="Sign out"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -108,7 +124,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="relative flex h-screen overflow-hidden bg-background">
-      {/* ── Subtle aurora background for the entire app shell ── */}
+      {/* ── Aurora background ── */}
       <div className="aurora-app-bg" aria-hidden="true" />
       <div className="aurora-app-dot-grid" aria-hidden="true" />
 
@@ -116,101 +132,125 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <aside
         className="relative z-10 flex w-64 shrink-0 flex-col text-sidebar-foreground"
         style={{
-          background: 'linear-gradient(180deg, rgba(20,20,24,0.95) 0%, rgba(12,12,15,0.98) 100%)',
-          borderRight: '1px solid rgba(255,255,255,0.06)',
-          backdropFilter: 'blur(20px)',
+          background: 'linear-gradient(180deg, rgba(10,8,22,0.97) 0%, rgba(6,6,14,0.99) 100%)',
+          borderRight: '1px solid rgba(255,255,255,0.07)',
+          backdropFilter: 'blur(24px)',
         }}
       >
         {/* Brand lockup */}
-        <div className="flex h-16 items-center gap-3 border-b border-white/[0.06] px-5">
+        <div className="flex h-16 items-center gap-3 px-5">
           <motion.div
             animate={shouldReduceMotion ? {} : {
               boxShadow: [
                 '0 0 0px rgba(99,102,241,0)',
-                '0 0 16px rgba(99,102,241,0.4)',
+                '0 0 20px rgba(99,102,241,0.5)',
                 '0 0 0px rgba(99,102,241,0)',
               ],
             }}
             transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-            className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/25"
+            className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/30"
           >
             <FileText className="h-5 w-5 text-white" />
           </motion.div>
-          <span className="text-lg font-display font-bold tracking-tight text-sidebar-foreground text-glow-sm">
-            Contracker
-          </span>
+          <div className="flex flex-col">
+            <span className="text-[15px] font-display font-bold tracking-tight text-white" style={{ textShadow: '0 0 20px rgba(129,140,248,0.4)' }}>
+              Contracker
+            </span>
+            <span className="flex items-center gap-1 text-[9px] text-indigo-400/70 uppercase tracking-widest font-medium">
+              <Sparkles className="h-2.5 w-2.5" />
+              Contract Intelligence
+            </span>
+          </div>
         </div>
 
-        {/* Gradient separator */}
-        <div className="gradient-line mx-5 mt-3 mb-1" />
+        {/* Gradient divider */}
+        <div className="mx-4 mb-2 h-px bg-gradient-to-r from-transparent via-indigo-500/30 to-transparent" />
 
         {/* Navigation */}
-        <nav className="flex-1 px-3 py-2" aria-label="Main navigation">
-          <ul className="space-y-1" role="list">
+        <nav className="flex-1 px-3 py-1" aria-label="Main navigation">
+          {/* Section label */}
+          <p className="px-3 pt-1 pb-2 text-[9px] font-semibold uppercase tracking-[0.2em] text-white/20">Menu</p>
+          <ul className="space-y-0.5" role="list">
             {navItems.map(({ label, href, icon: Icon }) => {
               const isActive = pathname === href || pathname.startsWith(href + '/')
+              const accent = NAV_ACCENT[href] ?? NAV_ACCENT['/dashboard']
+
               return (
                 <li key={href}>
-                  <motion.div
-                    animate={
-                      isActive && !shouldReduceMotion
-                        ? {
-                            boxShadow: [
-                              '0 0 0px rgba(99,102,241,0)',
-                              '0 0 12px rgba(99,102,241,0.2)',
-                              '0 0 0px rgba(99,102,241,0)',
-                            ],
-                          }
-                        : {}
-                    }
-                    transition={{ duration: 2.5, repeat: Infinity }}
-                    className="rounded-lg"
+                  <Link
+                    href={href}
+                    aria-current={isActive ? 'page' : undefined}
+                    className={cn(
+                      'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
+                      isActive
+                        ? 'text-white'
+                        : 'text-sidebar-foreground/45 hover:text-sidebar-foreground/80 hover:bg-white/[0.05]'
+                    )}
+                    style={isActive ? {
+                      background: 'linear-gradient(90deg, rgba(99,102,241,0.18) 0%, rgba(139,92,246,0.08) 60%, transparent 100%)',
+                      boxShadow: `inset 3px 0 0 ${accent.glow.replace('0.4', '0.8')}, 0 0 16px rgba(99,102,241,0.08)`,
+                    } : {}}
                   >
-                    <Link
-                      href={href}
-                      aria-current={isActive ? 'page' : undefined}
+                    {/* Icon wrapper */}
+                    <motion.div
+                      whileHover={shouldReduceMotion ? {} : { rotate: 6, scale: 1.1 }}
+                      transition={{ duration: 0.2, type: 'spring' }}
                       className={cn(
-                        'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200',
+                        'flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg transition-all duration-200',
                         isActive
-                          ? 'gradient-border-l bg-white/[0.08] text-sidebar-foreground text-glow-sm shadow-sm shadow-indigo-500/10'
-                          : 'text-sidebar-foreground/50 hover:text-sidebar-foreground/80 hover:bg-white/[0.04]'
+                          ? `bg-gradient-to-br ${accent.bg} border border-white/[0.10]`
+                          : 'group-hover:bg-white/[0.06]'
                       )}
                     >
-                      <motion.span
-                        className="flex-shrink-0"
-                        whileHover={shouldReduceMotion ? {} : { rotate: 8, scale: 1.15 }}
-                        transition={{ duration: 0.2, type: 'spring' }}
-                      >
-                        <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
-                      </motion.span>
-                      <motion.span
-                        whileHover={shouldReduceMotion ? {} : { x: 2 }}
-                        transition={{ duration: 0.15 }}
-                      >
-                        {label}
-                      </motion.span>
-                    </Link>
-                  </motion.div>
+                      <Icon
+                        className={cn(
+                          'h-[15px] w-[15px] transition-colors duration-200',
+                          isActive ? accent.text : 'text-sidebar-foreground/40 group-hover:text-sidebar-foreground/70'
+                        )}
+                        aria-hidden="true"
+                      />
+                    </motion.div>
+
+                    {/* Label */}
+                    <motion.span
+                      whileHover={shouldReduceMotion ? {} : { x: 2 }}
+                      transition={{ duration: 0.15 }}
+                      className={cn(isActive && 'font-semibold')}
+                    >
+                      {label}
+                    </motion.span>
+
+                    {/* Active glow pulse on the right */}
+                    {isActive && !shouldReduceMotion && (
+                      <motion.div
+                        className="ml-auto h-1.5 w-1.5 rounded-full bg-indigo-400"
+                        animate={{ opacity: [0.4, 1, 0.4] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      />
+                    )}
+                  </Link>
                 </li>
               )
             })}
           </ul>
         </nav>
 
-        {/* User footer with real session data + logout */}
+        {/* User footer */}
         <SidebarUserFooter />
       </aside>
 
       {/* ── Main content ── */}
       <div className="relative z-10 flex flex-1 flex-col overflow-hidden">
-        {/* Top header — glass effect */}
+        {/* Top header */}
         <header
-          className="relative flex h-14 items-center justify-between border-b border-white/[0.06] px-6 backdrop-blur-xl"
-          style={{ background: 'rgba(12, 12, 15, 0.7)' }}
+          className="relative flex h-14 items-center justify-between border-b px-6 backdrop-blur-xl"
+          style={{
+            background: 'rgba(6,8,17,0.75)',
+            borderColor: 'rgba(255,255,255,0.07)',
+          }}
         >
-          {/* Left: page icon + animated heading */}
           <div className="flex items-center gap-2.5">
-            <CurrentIcon className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+            <CurrentIcon className="h-4 w-4 text-muted-foreground/60" aria-hidden="true" />
             <AnimatePresence mode="wait">
               <motion.h1
                 key={pathname}
@@ -225,7 +265,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </AnimatePresence>
           </div>
 
-          {/* Right: search, bell, avatar */}
           <div className="flex items-center gap-1">
             <button className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-white/[0.06] hover:text-foreground">
               <Search className="h-4 w-4" />
@@ -239,25 +278,22 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-                className={cn(
-                  'absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-indigo-400',
-                  'animate-badge-pulse'
-                )}
+                className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-indigo-400 animate-badge-pulse"
               />
             </Link>
-            <div className="ml-2 flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500/20 to-violet-500/20 ring-1 ring-white/[0.12]">
+            <div className="ml-2 flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500/25 to-violet-500/25 ring-1 ring-white/[0.12]">
               <User className="h-3.5 w-3.5 text-muted-foreground" />
             </div>
           </div>
 
-          {/* Bottom gradient glow line — sweeping beam effect */}
+          {/* Bottom sweep line */}
           <div
-            className="absolute bottom-0 left-0 right-0 h-px animate-gradient-shift bg-gradient-to-r from-transparent via-indigo-500/30 to-transparent"
+            className="absolute bottom-0 left-0 right-0 h-px animate-gradient-shift bg-gradient-to-r from-transparent via-indigo-500/40 to-transparent"
             style={{ backgroundSize: '200% 100%' }}
           />
         </header>
 
-        {/* Animated page content */}
+        {/* Page content */}
         <motion.main
           key={pathname}
           variants={pageVariants}
