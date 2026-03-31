@@ -65,6 +65,17 @@ export default defineConfig({
       },
       dependencies: ['setup'],
     },
+
+    // Dashboard page tests (authenticated + unauthenticated redirect)
+    {
+      name: 'dashboard-pages',
+      testMatch: /dashboard\.spec\.ts/,
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: 'e2e/.auth/user.json',
+      },
+      dependencies: ['setup'],
+    },
   ],
 
   // Automatically start the Next.js dev server
