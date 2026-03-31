@@ -233,6 +233,171 @@ describe('GET /api/contracts', () => {
   })
 })
 
+// ─── GET /api/contracts/:id ───────────────────────────────────────────────────
+// Issue #12 [M1.3] — contract detail
+//
+// TDD RED 🔴 — these tests FAIL until GET is implemented (currently 501).
+
+import { GET as getContract, PUT as putContract } from '@/app/api/contracts/[id]/route'
+
+const mockContractWithSupplier = {
+  ...mockContract,
+  suppliers: { id: 'supplier-1', name: 'Acme Corp' },
+}
+
+describe('GET /api/contracts/[id]', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('returns 401 when not authenticated', async () => {
+    const qb = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({ data: null, error: null }),
+    }
+    mockCreateClient.mockReturnValue({
+      ...authClient(null),
+      from: vi.fn().mockReturnValue(qb),
+      storage: { from: vi.fn() },
+    } as any)
+
+    const req = new Request('http://localhost/api/contracts/contract-1')
+    const res = await getContract(req, { params: { id: 'contract-1' } })
+    expect(res.status).toBe(401)
+  })
+
+  it('returns 200 with contract and supplier data when authenticated', async () => {
+    const qb = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({ data: mockContractWithSupplier, error: null }),
+    }
+    mockCreateClient.mockReturnValue({
+      ...authClient('user-1'),
+      from: vi.fn().mockReturnValue(qb),
+      storage: { from: vi.fn().mockReturnValue({ createSignedUrl: vi.fn() }) },
+    } as any)
+
+    const req = new Request('http://localhost/api/contracts/contract-1')
+    const res = await getContract(req, { params: { id: 'contract-1' } })
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.data.name).toBe('Support Agreement')
+    expect(body.data.suppliers.name).toBe('Acme Corp')
+    expect(body.error).toBeNull()
+  })
+
+  it('returns 404 when contract is not found', async () => {
+    const qb = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({ data: null, error: { code: 'PGRST116', message: 'Not found' } }),
+    }
+    mockCreateClient.mockReturnValue({
+      ...authClient('user-1'),
+      from: vi.fn().mockReturnValue(qb),
+      storage: { from: vi.fn() },
+    } as any)
+
+    const req = new Request('http://localhost/api/contracts/nonexistent')
+    const res = await getContract(req, { params: { id: 'nonexistent' } })
+    expect(res.status).toBe(404)
+  })
+
+  it('returns signed_url when pdf_url is set', async () => {
+    const contractWithPdf = { ...mockContractWithSupplier, pdf_url: 'some-uuid.pdf' }
+    const qb = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({ data: contractWithPdf, error: null }),
+    }
+    const storageMock = {
+      createSignedUrl: vi.fn().mockResolvedValue({
+        data: { signedUrl: 'https://storage.example.com/signed' },
+        error: null,
+      }),
+    }
+    mockCreateClient.mockReturnValue({
+      ...authClient('user-1'),
+      from: vi.fn().mockReturnValue(qb),
+      storage: { from: vi.fn().mockReturnValue(storageMock) },
+    } as any)
+
+    const req = new Request('http://localhost/api/contracts/contract-1')
+    const res = await getContract(req, { params: { id: 'contract-1' } })
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.data.signed_url).toBe('https://storage.example.com/signed')
+    expect(storageMock.createSignedUrl).toHaveBeenCalledWith('some-uuid.pdf', 900)
+  })
+})
+
+// ─── PUT /api/contracts/:id ───────────────────────────────────────────────────
+// Issue #12 [M1.3] — contract edit
+//
+// TDD RED 🔴 — these tests FAIL until PUT is implemented (currently 501).
+
+describe('PUT /api/contracts/[id]', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('returns 401 when not authenticated', async () => {
+    const qb = {
+      update: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({ data: null, error: null }),
+    }
+    mockCreateClient.mockReturnValue({ ...authClient(null), from: vi.fn().mockReturnValue(qb) } as any)
+
+    const req = new Request('http://localhost/api/contracts/contract-1', {
+      method: 'PUT',
+      body: JSON.stringify({ name: 'Updated Name' }),
+      headers: { 'Content-Type': 'application/json' },
+    })
+    const res = await putContract(req, { params: { id: 'contract-1' } })
+    expect(res.status).toBe(401)
+  })
+
+  it('returns 200 with updated contract on valid payload', async () => {
+    const updated = { ...mockContract, name: 'Updated Name' }
+    const qb = {
+      update: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({ data: updated, error: null }),
+    }
+    mockCreateClient.mockReturnValue({ ...authClient('user-1'), from: vi.fn().mockReturnValue(qb) } as any)
+
+    const req = new Request('http://localhost/api/contracts/contract-1', {
+      method: 'PUT',
+      body: JSON.stringify({ name: 'Updated Name' }),
+      headers: { 'Content-Type': 'application/json' },
+    })
+    const res = await putContract(req, { params: { id: 'contract-1' } })
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.data.name).toBe('Updated Name')
+    expect(body.error).toBeNull()
+  })
+
+  it('returns 400 on Zod validation failure (invalid date format)', async () => {
+    const qb = {
+      update: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({ data: null, error: null }),
+    }
+    mockCreateClient.mockReturnValue({ ...authClient('user-1'), from: vi.fn().mockReturnValue(qb) } as any)
+
+    const req = new Request('http://localhost/api/contracts/contract-1', {
+      method: 'PUT',
+      body: JSON.stringify({ end_date: 'not-a-date' }),
+      headers: { 'Content-Type': 'application/json' },
+    })
+    const res = await putContract(req, { params: { id: 'contract-1' } })
+    expect(res.status).toBe(400)
+  })
+})
+
 // ─── DELETE /api/contracts/:id ────────────────────────────────────────────────
 
 describe('DELETE /api/contracts/[id]', () => {
