@@ -479,6 +479,96 @@ describe('DELETE /api/contracts/[id]', () => {
   })
 })
 
+// ─── GET /api/contracts — query params ───────────────────────────────────────
+// Issue #15 [M2.0] — search, filter, sort, pagination
+//
+// TDD RED 🔴 — tests FAIL until GET handler supports query params.
+// AC-04-2: Search term passed to Supabase or() for name/supplier filtering
+// AC-04-3: Status filter applied in application layer (never SQL)
+// AC-04-4: Pagination returns a page slice + total count
+
+describe('GET /api/contracts — query params', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  // Helper: chainable query builder with all filter methods
+  function makeQb(data: unknown[]) {
+    return {
+      select: vi.fn().mockReturnThis(),
+      ilike: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      order: vi.fn().mockResolvedValue({ data, error: null }),
+    }
+  }
+
+  // Contracts with predictable statuses (relative to today ≈ 2026-03-30)
+  const expiredContract = {
+    ...mockContract,
+    id: 'c-expired',
+    end_date: '2020-01-01',      // past → expired
+    renewal_date: '2019-10-01',
+    notice_period_days: 30,
+  }
+  const expiringContract = {
+    ...mockContract,
+    id: 'c-expiring',
+    end_date: '2030-01-01',
+    renewal_date: '2026-04-15',  // ~16 days from today → within 30-day notice → expiring
+    notice_period_days: 30,
+  }
+  const activeContract = {
+    ...mockContract,
+    id: 'c-active',
+    end_date: '2030-01-01',
+    renewal_date: '2028-01-01',  // ~700 days from today → active
+    notice_period_days: 30,
+  }
+
+  it('passes search term to Supabase ilike() for contract name filtering (AC-04-2)', async () => {
+    const qb = makeQb([mockContract])
+    mockCreateClient.mockReturnValue({ ...authClient('user-1'), from: vi.fn().mockReturnValue(qb) } as any)
+
+    const res = await getContracts(new Request('http://localhost/api/contracts?search=support'))
+    expect(res.status).toBe(200)
+    expect(qb.ilike).toHaveBeenCalledWith('name', '%support%')
+  })
+
+  it('filters by status in application layer — returns only expiring contracts (AC-04-3)', async () => {
+    const qb = makeQb([expiredContract, expiringContract, activeContract])
+    mockCreateClient.mockReturnValue({ ...authClient('user-1'), from: vi.fn().mockReturnValue(qb) } as any)
+
+    const res = await getContracts(new Request('http://localhost/api/contracts?status=expiring'))
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.data).toHaveLength(1)
+    expect(body.data[0].id).toBe('c-expiring')
+    expect(body.data[0].status).toBe('expiring')
+  })
+
+  it('paginates results — returns page slice and total count (AC-04-4)', async () => {
+    const manyContracts = Array.from({ length: 25 }, (_, i) => ({
+      ...activeContract,
+      id: `contract-${i + 1}`,
+    }))
+    const qb = makeQb(manyContracts)
+    mockCreateClient.mockReturnValue({ ...authClient('user-1'), from: vi.fn().mockReturnValue(qb) } as any)
+
+    const res = await getContracts(new Request('http://localhost/api/contracts?limit=20&page=1'))
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.data).toHaveLength(20)
+    expect(body.total).toBe(25)
+  })
+
+  it('orders by value when sort=value', async () => {
+    const qb = makeQb([mockContract])
+    mockCreateClient.mockReturnValue({ ...authClient('user-1'), from: vi.fn().mockReturnValue(qb) } as any)
+
+    const res = await getContracts(new Request('http://localhost/api/contracts?sort=value'))
+    expect(res.status).toBe(200)
+    expect(qb.order).toHaveBeenCalledWith('value', expect.objectContaining({ ascending: true }))
+  })
+})
+
 // ─── POST /api/contracts/[id]/upload ─────────────────────────────────────────
 // Issue #11 [M1.3] — AC-03-4, AC-03-5
 //
