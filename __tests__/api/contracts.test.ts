@@ -231,6 +231,24 @@ describe('GET /api/contracts', () => {
     expect(body.data[0].name).toBe('Support Agreement')
     expect(body.error).toBeNull()
   })
+
+  it('includes computed status and risk_colour for each contract', async () => {
+    // mockContract: end_date 2026-01-01, renewal_date 2025-10-01
+    // With today ≈ 2026-03-30 these dates are in the past → status = 'expired', risk_colour = 'red'
+    // We just need the fields to be present and be one of the valid enum values.
+    const qb = {
+      select: vi.fn().mockReturnThis(),
+      order: vi.fn().mockResolvedValue({ data: [mockContract], error: null }),
+    }
+    mockCreateClient.mockReturnValue({ ...authClient('user-1'), from: vi.fn().mockReturnValue(qb) } as any)
+
+    const res = await getContracts(new Request('http://localhost/api/contracts'))
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    const contract = body.data[0]
+    expect(['active', 'expiring', 'expired']).toContain(contract.status)
+    expect(['green', 'amber', 'red']).toContain(contract.risk_colour)
+  })
 })
 
 // ─── GET /api/contracts/:id ───────────────────────────────────────────────────
