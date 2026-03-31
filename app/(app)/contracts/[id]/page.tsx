@@ -1,11 +1,12 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, Edit2, FileDown, Trash2 } from 'lucide-react'
+import { ArrowLeft, Edit2, FileDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { createClient } from '@/lib/supabase/server'
 import { formatDate, formatCurrency } from '@/lib/utils'
 import { getContractStatus, getRiskColour } from '@/lib/risk'
+import { DeleteContractButton } from '@/components/contracts/DeleteContractButton'
 
 const RISK_BADGE: Record<string, string> = {
   green: 'border-emerald-500/20 bg-emerald-500/15 text-emerald-400',
@@ -100,19 +101,7 @@ export default async function ContractDetailPage({
               Edit
             </Link>
           </Button>
-          {isAdmin && (
-            <Button
-              asChild
-              variant="outline"
-              size="sm"
-              className="border-red-500/20 text-red-400 hover:bg-red-500/10"
-            >
-              <Link href={`/contracts/${contract.id}/delete`}>
-                <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-                Delete
-              </Link>
-            </Button>
-          )}
+          {isAdmin && <DeleteContractButton contractId={contract.id} />}
         </div>
       </div>
 
