@@ -32,7 +32,7 @@ const contractSchema = z.object({
   { message: 'Renewal date must be on or before end date', path: ['renewal_date'] }
 )
 
-export async function GET(_req: Request) {
+export async function GET(req: Request) {
   const supabase = createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
@@ -43,10 +43,27 @@ export async function GET(_req: Request) {
     )
   }
 
-  const { data: contracts, error } = await supabase
-    .from('contracts')
-    .select('*, suppliers(id, name)')
-    .order('renewal_date')
+  const { searchParams } = new URL(req.url)
+  const search     = searchParams.get('search') ?? ''
+  const status     = searchParams.get('status') ?? ''
+  const supplierId = searchParams.get('supplier_id') ?? ''
+  const category   = searchParams.get('category') ?? ''
+  const type       = searchParams.get('type') ?? ''
+  const sort       = searchParams.get('sort') ?? 'renewal_date'
+  const page       = Math.max(1, Number(searchParams.get('page') ?? 1))
+  const limit      = Math.min(100, Math.max(1, Number(searchParams.get('limit') ?? 20)))
+
+  // Cast needed: Supabase strict generics don't resolve builder types correctly.
+  let query = (supabase.from('contracts') as any).select('*, suppliers(id, name)')
+  if (search)      query = query.or(`name.ilike.%${search}%,suppliers.name.ilike.%${search}%`)
+  if (supplierId)  query = query.eq('supplier_id', supplierId)
+  if (category)    query = query.eq('category', category)
+  if (type)        query = query.eq('type', type)
+
+  const sortColumn = sort === 'value' ? 'value' : sort === 'name' ? 'name' : 'renewal_date'
+  query = query.order(sortColumn, { ascending: true })
+
+  const { data: contracts, error } = await query
 
   if (error) {
     return NextResponse.json(
@@ -55,14 +72,19 @@ export async function GET(_req: Request) {
     )
   }
 
-  // Cast needed: Supabase strict generics don't resolve row types correctly.
+  // Enrich with computed status/risk_colour (status is never stored in DB)
   const enriched = (contracts as any[]).map((c) => ({
     ...c,
     status: getContractStatus(new Date(c.end_date), new Date(c.renewal_date), c.notice_period_days),
     risk_colour: getRiskColour(new Date(c.renewal_date), c.notice_period_days),
   }))
 
-  return NextResponse.json({ data: enriched, error: null })
+  // Status filter must happen in app layer — never in SQL
+  const filtered = status ? enriched.filter((c) => c.status === status) : enriched
+  const total = filtered.length
+  const data = filtered.slice((page - 1) * limit, page * limit)
+
+  return NextResponse.json({ data, total, error: null })
 }
 
 export async function POST(req: Request) {
