@@ -6,12 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { createClient } from '@/lib/supabase/server'
 import { formatDate, formatCurrency } from '@/lib/utils'
 import { getContractStatus, getRiskColour } from '@/lib/risk'
-
-const RISK_BADGE: Record<string, string> = {
-  green: 'border-emerald-500/20 bg-emerald-500/15 text-emerald-400',
-  amber: 'border-amber-500/20 bg-amber-500/15 text-amber-400',
-  red: 'border-red-500/20 bg-red-500/15 text-red-400',
-}
+import { RiskBadge } from '@/components/ui/RiskBadge'
 
 export default async function SupplierDetailPage({
   params,
@@ -41,6 +36,24 @@ export default async function SupplierDetailPage({
   if (error || !supplier) notFound()
 
   const contracts = supplier.contracts ?? []
+
+  // Compute derived stats for the health panel
+  const totalValue = contracts.reduce((s: number, c: any) => s + (c.value ?? 0), 0)
+
+  const riskColours = contracts.map((c: any) =>
+    getRiskColour(new Date(c.renewal_date), c.notice_period_days)
+  )
+  const worstRisk: 'green' | 'amber' | 'red' = riskColours.includes('red')
+    ? 'red'
+    : riskColours.includes('amber')
+    ? 'amber'
+    : 'green'
+
+  const worstStatus = worstRisk === 'red'
+    ? 'expired' as const
+    : worstRisk === 'amber'
+    ? 'expiring' as const
+    : 'active' as const
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
@@ -79,6 +92,26 @@ export default async function SupplierDetailPage({
           </Button>
         </div>
       </div>
+
+      {/* Supplier Health panel */}
+      {contracts.length > 0 && (
+        <div className="glass rounded-xl p-5 mb-6 grid grid-cols-3 gap-4">
+          <div className="text-center">
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60">Contracts</p>
+            <p className="mt-1 text-2xl font-display font-bold text-foreground">{contracts.length}</p>
+          </div>
+          <div className="text-center">
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60">Total Value</p>
+            <p className="mt-1 text-2xl font-display font-bold text-foreground">${totalValue.toLocaleString()}</p>
+          </div>
+          <div className="text-center">
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60">Portfolio Risk</p>
+            <div className="mt-1 flex justify-center">
+              <RiskBadge status={worstStatus} risk={worstRisk} />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Contact info */}
       <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-5">
@@ -135,7 +168,7 @@ export default async function SupplierDetailPage({
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/[0.04]">
-                {contracts.map((c) => {
+                {contracts.map((c, index) => {
                   const status = getContractStatus(
                     new Date(c.end_date),
                     new Date(c.renewal_date),
@@ -146,7 +179,11 @@ export default async function SupplierDetailPage({
                     c.notice_period_days
                   )
                   return (
-                    <tr key={c.id} className="transition-colors hover:bg-white/[0.03]">
+                    <tr
+                      key={c.id}
+                      className="transition-colors hover:bg-white/[0.03] animate-flicker-in"
+                      style={{ animationDelay: `${index * 30}ms` }}
+                    >
                       <td className="px-4 py-3">
                         <Link
                           href={`/contracts/${c.id}`}
@@ -165,8 +202,7 @@ export default async function SupplierDetailPage({
                         {formatCurrency(c.value)}
                       </td>
                       <td className="px-4 py-3">
-                        {/* Text label alongside colour badge — accessibility */}
-                        <Badge className={RISK_BADGE[risk]}>{status}</Badge>
+                        <RiskBadge status={status} risk={risk} />
                       </td>
                     </tr>
                   )

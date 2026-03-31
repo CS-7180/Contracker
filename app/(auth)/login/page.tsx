@@ -3,11 +3,13 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Eye, EyeOff, FileText, ShieldCheck, DollarSign } from 'lucide-react'
+import { Eye, EyeOff, FileText, ShieldCheck, DollarSign, Loader2 } from 'lucide-react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { GlowCard } from '@/components/ui/GlowCard'
+import { useToast } from '@/components/ui/use-toast'
 
 const features = [
   {
@@ -36,6 +38,7 @@ const features = [
 export default function LoginPage() {
   const router = useRouter()
   const shouldReduceMotion = useReducedMotion()
+  const { toast } = useToast()
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -48,20 +51,44 @@ export default function LoginPage() {
     setError(null)
     setLoading(true)
 
-    const supabase = createClient()
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    try {
+      const supabase = createClient()
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
 
-    if (error) {
-      setError(error.message)
+      if (error) {
+        setError(error.message)
+        // Only show toast for non-credentials errors (generic/network errors)
+        const isCredentialsError =
+          error.message.toLowerCase().includes('invalid') ||
+          error.message.toLowerCase().includes('credentials') ||
+          error.message.toLowerCase().includes('password') ||
+          error.message.toLowerCase().includes('email')
+        if (!isCredentialsError) {
+          toast({
+            title: 'Something went wrong',
+            description: error.message,
+            variant: 'destructive',
+          })
+        }
+        setLoading(false)
+        return
+      }
+
+      router.push('/dashboard')
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'An unexpected error occurred'
+      setError(message)
+      toast({
+        title: 'Something went wrong',
+        description: message,
+        variant: 'destructive',
+      })
       setLoading(false)
-      return
     }
-
-    router.push('/dashboard')
   }
 
   return (
-    <div className="aurora-bg flex min-h-screen">
+    <div className="aurora-bg star-field flex min-h-screen">
       {/* Dot grid overlay */}
       <div
         className="pointer-events-none absolute inset-0 z-[1]"
@@ -130,95 +157,97 @@ export default function LoginPage() {
             <p className="text-sm text-zinc-400">Contract &amp; Supplier Management</p>
           </div>
 
-          {/* Glass card — rich frost on vibrant aurora */}
-          <div
-            className="rounded-2xl border border-white/20 p-8"
-            style={{
-              background: 'rgba(255, 255, 255, 0.12)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
-              boxShadow:
-                '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.12)',
-            }}
-          >
-            <div className="mb-6">
-              <h2 className="text-xl font-display font-semibold text-white">Sign in</h2>
-              <p className="mt-1 text-sm text-zinc-300/70">Enter your credentials to access your workspace</p>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div className="space-y-1.5">
-                <Label htmlFor="email" className="text-sm font-medium text-zinc-200">
-                  Email
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@company.com"
-                  autoComplete="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="h-11 rounded-lg border-white/15 bg-white/[0.1] text-white placeholder:text-zinc-500 focus-visible:border-indigo-400 focus-visible:ring-1 focus-visible:ring-indigo-400/50"
-                />
+          {/* GlowCard wrapping the form */}
+          <GlowCard className="w-full" glowColor="#818cf8">
+            <div className="rounded-2xl border border-white/20 p-8"
+              style={{
+                background: 'rgba(255, 255, 255, 0.12)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                boxShadow:
+                  '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.12)',
+              }}
+            >
+              <div className="mb-6">
+                <h2 className="text-xl font-display font-semibold text-white">Sign in</h2>
+                <p className="mt-1 text-sm text-zinc-300/70">Enter your credentials to access your workspace</p>
               </div>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="password" className="text-sm font-medium text-zinc-200">
-                  Password
-                </Label>
-                <div className="relative">
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div className="space-y-1.5">
+                  <Label htmlFor="email" className="text-sm font-medium text-zinc-200">
+                    Email
+                  </Label>
                   <Input
-                    id="password"
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="••••••••"
-                    autoComplete="current-password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    id="email"
+                    type="email"
+                    placeholder="you@company.com"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="h-11 rounded-lg border-white/15 bg-white/[0.1] pr-10 text-white placeholder:text-zinc-500 focus-visible:border-indigo-400 focus-visible:ring-1 focus-visible:ring-indigo-400/50"
+                    className="h-11 rounded-lg border-white/15 bg-white/[0.1] text-white placeholder:text-zinc-500 focus-visible:border-indigo-400 focus-visible:ring-1 focus-visible:ring-indigo-400/50 focus-visible:shadow-[0_0_20px_rgba(129,140,248,0.25)]"
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((v) => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-zinc-400 transition-colors hover:text-zinc-200"
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
                 </div>
-              </div>
 
-              {error && (
-                <p role="alert" className="text-sm text-red-400">
-                  {error}
-                </p>
-              )}
+                <div className="space-y-1.5">
+                  <Label htmlFor="password" className="text-sm font-medium text-zinc-200">
+                    Password
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="••••••••"
+                      autoComplete="current-password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      className="h-11 rounded-lg border-white/15 bg-white/[0.1] pr-10 text-white placeholder:text-zinc-500 focus-visible:border-indigo-400 focus-visible:ring-1 focus-visible:ring-indigo-400/50 focus-visible:shadow-[0_0_20px_rgba(129,140,248,0.25)]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-zinc-400 transition-colors hover:text-zinc-200"
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
 
-              <motion.div
-                whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}
-                transition={{ duration: 0.1 }}
-              >
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full h-11 rounded-lg bg-gradient-to-r from-indigo-500 to-violet-600 px-4 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition-all duration-200 hover:from-indigo-400 hover:to-violet-500 hover:shadow-xl hover:shadow-indigo-500/40 disabled:cursor-not-allowed disabled:opacity-60"
+                {error && (
+                  <p role="alert" className="text-sm text-red-400">
+                    {error}
+                  </p>
+                )}
+
+                <motion.div
+                  whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}
+                  transition={{ duration: 0.1 }}
                 >
-                  {loading ? 'Signing in…' : 'Sign in'}
-                </button>
-              </motion.div>
-            </form>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="flex w-full items-center justify-center h-11 rounded-lg bg-gradient-to-r from-indigo-500 to-violet-600 px-4 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition-all duration-200 hover:from-indigo-400 hover:to-violet-500 hover:shadow-xl hover:shadow-indigo-500/40 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {loading && <Loader2 className="animate-spin h-4 w-4 mr-2" />}
+                    {loading ? 'Signing in…' : 'Sign in'}
+                  </button>
+                </motion.div>
+              </form>
 
-            <p className="mt-6 text-center text-sm text-zinc-400">
-              Don&apos;t have an account?{' '}
-              <Link
-                href="/signup"
-                className="font-medium text-indigo-400 transition-colors hover:text-indigo-300"
-              >
-                Sign up
-              </Link>
-            </p>
-          </div>
+              <p className="mt-6 text-center text-sm text-zinc-400">
+                Don&apos;t have an account?{' '}
+                <Link
+                  href="/signup"
+                  className="font-medium text-indigo-400 transition-colors hover:text-indigo-300"
+                >
+                  Sign up
+                </Link>
+              </p>
+            </div>
+          </GlowCard>
         </motion.div>
       </div>
     </div>

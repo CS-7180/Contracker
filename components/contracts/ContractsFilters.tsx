@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { Search } from 'lucide-react'
 
 interface ContractsFiltersProps {
   suppliers: Array<{ id: string; name: string }>
@@ -56,24 +57,29 @@ export function ContractsFilters({
     'h-9 rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-indigo-500'
 
   return (
-    <form onSubmit={handleSearchSubmit} className="flex flex-wrap items-end gap-2">
-      {/* Search */}
-      <div className="flex gap-2">
-        <input
-          type="search"
-          placeholder="Search contracts..."
-          value={searchValue}
-          onChange={(e) => setSearchValue(e.target.value)}
-          aria-label="Search contracts"
-          className="h-9 w-56 rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-indigo-500"
-        />
-        <button
-          type="submit"
-          className="h-9 rounded-lg border border-white/[0.08] bg-white/[0.06] px-3 text-sm text-foreground hover:bg-white/[0.09] transition-colors"
-        >
-          Search
-        </button>
-      </div>
+    <div className="glass rounded-xl p-3 flex flex-wrap items-center gap-2 mb-4">
+      <form onSubmit={handleSearchSubmit} className="flex flex-wrap items-center gap-2">
+        {/* Search */}
+        <div className="flex gap-2">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <input
+              type="search"
+              placeholder="Search contracts..."
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              aria-label="Search contracts"
+              className="h-9 w-56 rounded-lg border border-white/[0.08] bg-white/[0.03] pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            />
+          </div>
+          <button
+            type="submit"
+            className="h-9 rounded-lg border border-white/[0.08] bg-white/[0.06] px-3 text-sm text-foreground hover:bg-white/[0.09] transition-colors"
+          >
+            Search
+          </button>
+        </div>
+      </form>
 
       {/* Status filter */}
       <select
@@ -130,6 +136,6 @@ export function ContractsFilters({
         <option value="value">Sort: Value</option>
         <option value="name">Sort: Name</option>
       </select>
-    </form>
+    </div>
   )
 }

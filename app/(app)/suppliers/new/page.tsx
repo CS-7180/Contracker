@@ -3,13 +3,16 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Loader2 } from 'lucide-react'
+import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { useToast } from '@/components/ui/use-toast'
 
 export default function NewSupplierPage() {
   const router = useRouter()
+  const { toast } = useToast()
   const [form, setForm] = useState({
     name: '',
     contact_name: '',
@@ -33,11 +36,14 @@ export default function NewSupplierPage() {
 
     const body = await res.json()
     if (!res.ok) {
-      setError(body.error?.message ?? 'Failed to create supplier')
+      const msg = body.error?.message ?? 'Failed to create supplier'
+      setError(msg)
+      toast({ title: 'Failed to create supplier', description: msg, variant: 'destructive' })
       setLoading(false)
       return
     }
 
+    toast({ title: 'Supplier created' })
     router.push('/suppliers')
   }
 
@@ -68,57 +74,61 @@ export default function NewSupplierPage() {
         onSubmit={handleSubmit}
         className="space-y-5 rounded-xl border border-white/[0.08] bg-white/[0.03] p-6"
       >
-        <div className="space-y-2">
-          <Label htmlFor="name">Company Name *</Label>
-          <Input
-            id="name"
-            value={form.name}
-            onChange={field('name')}
-            placeholder="Acme Corporation"
-            required
-          />
-        </div>
+        <div className="form-section form-section-indigo">
+          <p className="mb-4 text-[10px] uppercase tracking-widest text-muted-foreground/60">Supplier Details</p>
 
-        <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="contact_name">Contact Name</Label>
+            <Label htmlFor="name">Company Name *</Label>
             <Input
-              id="contact_name"
-              value={form.contact_name}
-              onChange={field('contact_name')}
-              placeholder="Jane Smith"
+              id="name"
+              value={form.name}
+              onChange={field('name')}
+              placeholder="Acme Corporation"
+              required
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="contact_email">Contact Email</Label>
-            <Input
-              id="contact_email"
-              type="email"
-              value={form.contact_email}
-              onChange={field('contact_email')}
-              placeholder="jane@acme.com"
-            />
-          </div>
-        </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="contact_phone">Contact Phone</Label>
-            <Input
-              id="contact_phone"
-              value={form.contact_phone}
-              onChange={field('contact_phone')}
-              placeholder="+1 555 000 0000"
-            />
+          <div className="grid grid-cols-2 gap-4 mt-4">
+            <div className="space-y-2">
+              <Label htmlFor="contact_name">Contact Name</Label>
+              <Input
+                id="contact_name"
+                value={form.contact_name}
+                onChange={field('contact_name')}
+                placeholder="Jane Smith"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="contact_email">Contact Email</Label>
+              <Input
+                id="contact_email"
+                type="email"
+                value={form.contact_email}
+                onChange={field('contact_email')}
+                placeholder="jane@acme.com"
+              />
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="category">Category</Label>
-            <Input
-              id="category"
-              value={form.category}
-              onChange={field('category')}
-              placeholder="Technology"
-            />
+
+          <div className="grid grid-cols-2 gap-4 mt-4">
+            <div className="space-y-2">
+              <Label htmlFor="contact_phone">Contact Phone</Label>
+              <Input
+                id="contact_phone"
+                value={form.contact_phone}
+                onChange={field('contact_phone')}
+                placeholder="+1 555 000 0000"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="category">Category</Label>
+              <Input
+                id="category"
+                value={form.category}
+                onChange={field('category')}
+                placeholder="Technology"
+              />
+            </div>
           </div>
         </div>
 
@@ -132,9 +142,15 @@ export default function NewSupplierPage() {
           <Button asChild variant="outline" type="button">
             <Link href="/suppliers">Cancel</Link>
           </Button>
-          <Button type="submit" disabled={loading}>
+          <motion.button
+            type="submit"
+            disabled={loading}
+            whileTap={{ scale: 0.97 }}
+            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+          >
+            {loading && <Loader2 className="animate-spin h-4 w-4 mr-2" />}
             {loading ? 'Creating…' : 'Create Supplier'}
-          </Button>
+          </motion.button>
         </div>
       </form>
     </div>
