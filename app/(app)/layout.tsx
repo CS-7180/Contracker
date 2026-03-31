@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { motion, useReducedMotion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard,
@@ -13,8 +14,10 @@ import {
   Search,
   Settings,
   User,
+  LogOut,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { createClient } from '@/lib/supabase/client'
 
 const navItems = [
   { label: 'Dashboard',     href: '/dashboard',     icon: LayoutDashboard },
@@ -24,6 +27,65 @@ const navItems = [
   { label: 'Spend',         href: '/spend',         icon: DollarSign },
   { label: 'Notifications', href: '/notifications', icon: Bell },
 ]
+
+function SidebarUserFooter() {
+  const router = useRouter()
+  const [user, setUser] = useState<{ email: string; full_name?: string } | null>(null)
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) {
+        setUser({
+          email: data.user.email ?? '',
+          full_name: data.user.user_metadata?.full_name,
+        })
+      }
+    })
+  }, [])
+
+  async function handleLogout() {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    router.push('/login')
+  }
+
+  const initials = user?.full_name
+    ? user.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
+    : user?.email?.[0]?.toUpperCase() ?? 'U'
+
+  return (
+    <div className="mt-auto border-t border-white/[0.06] px-4 py-3">
+      <div className="flex items-center gap-3">
+        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500/30 to-violet-500/30 ring-1 ring-white/[0.15] text-xs font-bold text-indigo-300">
+          {initials}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-xs font-medium text-sidebar-foreground/80">
+            {user?.full_name ?? user?.email?.split('@')[0] ?? 'User'}
+          </p>
+          <p className="truncate text-[10px] text-sidebar-foreground/40">{user?.email ?? ''}</p>
+        </div>
+        <div className="flex items-center gap-0.5">
+          <Link
+            href="/settings/team"
+            className="rounded-md p-1.5 text-sidebar-foreground/40 transition-colors hover:bg-white/[0.06] hover:text-sidebar-foreground/70"
+            title="Settings"
+          >
+            <Settings className="h-3.5 w-3.5" />
+          </Link>
+          <button
+            onClick={handleLogout}
+            className="rounded-md p-1.5 text-sidebar-foreground/40 transition-colors hover:bg-red-500/10 hover:text-red-400"
+            title="Sign out"
+          >
+            <LogOut className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -45,19 +107,35 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const CurrentIcon = currentNav?.icon ?? FileText
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
+    <div className="relative flex h-screen overflow-hidden bg-background">
+      {/* ── Subtle aurora background for the entire app shell ── */}
+      <div className="aurora-app-bg" aria-hidden="true" />
+      <div className="aurora-app-dot-grid" aria-hidden="true" />
+
       {/* ── Sidebar ── */}
       <aside
-        className="flex w-64 shrink-0 flex-col text-sidebar-foreground"
+        className="relative z-10 flex w-64 shrink-0 flex-col text-sidebar-foreground"
         style={{
-          background: 'linear-gradient(180deg, #141418 0%, #0c0c0f 100%)',
+          background: 'linear-gradient(180deg, rgba(20,20,24,0.95) 0%, rgba(12,12,15,0.98) 100%)',
+          borderRight: '1px solid rgba(255,255,255,0.06)',
+          backdropFilter: 'blur(20px)',
         }}
       >
         {/* Brand lockup */}
         <div className="flex h-16 items-center gap-3 border-b border-white/[0.06] px-5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/25">
+          <motion.div
+            animate={shouldReduceMotion ? {} : {
+              boxShadow: [
+                '0 0 0px rgba(99,102,241,0)',
+                '0 0 16px rgba(99,102,241,0.4)',
+                '0 0 0px rgba(99,102,241,0)',
+              ],
+            }}
+            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+            className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/25"
+          >
             <FileText className="h-5 w-5 text-white" />
-          </div>
+          </motion.div>
           <span className="text-lg font-display font-bold tracking-tight text-sidebar-foreground text-glow-sm">
             Contracker
           </span>
@@ -73,7 +151,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               const isActive = pathname === href || pathname.startsWith(href + '/')
               return (
                 <li key={href}>
-                  {/* Ambient glow pulse wrapper for active item */}
                   <motion.div
                     animate={
                       isActive && !shouldReduceMotion
@@ -99,18 +176,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                           : 'text-sidebar-foreground/50 hover:text-sidebar-foreground/80 hover:bg-white/[0.04]'
                       )}
                     >
-                      {/* Icon with hover rotate + scale */}
                       <motion.span
                         className="flex-shrink-0"
-                        whileHover={
-                          shouldReduceMotion ? {} : { rotate: 8, scale: 1.15 }
-                        }
+                        whileHover={shouldReduceMotion ? {} : { rotate: 8, scale: 1.15 }}
                         transition={{ duration: 0.2, type: 'spring' }}
                       >
                         <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
                       </motion.span>
-
-                      {/* Label with hover nudge */}
                       <motion.span
                         whileHover={shouldReduceMotion ? {} : { x: 2 }}
                         transition={{ duration: 0.15 }}
@@ -125,29 +197,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </ul>
         </nav>
 
-        {/* User footer */}
-        <div className="mt-auto border-t border-white/[0.06] px-4 py-3">
-          <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500/20 to-violet-500/20 ring-1 ring-white/[0.12]">
-              <User className="h-4 w-4 text-sidebar-foreground/70" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-xs font-medium text-sidebar-foreground/80">User</p>
-              <p className="truncate text-[10px] text-sidebar-foreground/40">user@contracker.dev</p>
-            </div>
-            <button className="rounded-md p-1.5 text-sidebar-foreground/40 transition-colors hover:bg-white/[0.06] hover:text-sidebar-foreground/70">
-              <Settings className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
+        {/* User footer with real session data + logout */}
+        <SidebarUserFooter />
       </aside>
 
       {/* ── Main content ── */}
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="relative z-10 flex flex-1 flex-col overflow-hidden">
         {/* Top header — glass effect */}
         <header
           className="relative flex h-14 items-center justify-between border-b border-white/[0.06] px-6 backdrop-blur-xl"
-          style={{ background: 'rgba(19, 19, 22, 0.6)' }}
+          style={{ background: 'rgba(12, 12, 15, 0.7)' }}
         >
           {/* Left: page icon + animated heading */}
           <div className="flex items-center gap-2.5">
@@ -171,7 +230,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <button className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-white/[0.06] hover:text-foreground">
               <Search className="h-4 w-4" />
             </button>
-            <button className="relative rounded-lg p-2 text-muted-foreground transition-colors hover:bg-white/[0.06] hover:text-foreground">
+            <Link
+              href="/notifications"
+              className="relative rounded-lg p-2 text-muted-foreground transition-colors hover:bg-white/[0.06] hover:text-foreground"
+            >
               <Bell className="h-4 w-4" />
               <motion.span
                 initial={{ scale: 0 }}
@@ -179,10 +241,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 transition={{ type: 'spring', stiffness: 260, damping: 20 }}
                 className={cn(
                   'absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-indigo-400',
-                  !shouldReduceMotion && 'animate-badge-pulse'
+                  'animate-badge-pulse'
                 )}
               />
-            </button>
+            </Link>
             <div className="ml-2 flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500/20 to-violet-500/20 ring-1 ring-white/[0.12]">
               <User className="h-3.5 w-3.5 text-muted-foreground" />
             </div>
@@ -202,11 +264,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           initial="hidden"
           animate="visible"
           className="relative flex-1 overflow-auto p-6"
-          style={{
-            backgroundImage: `
-              radial-gradient(ellipse at 90% 90%, rgba(99,102,241,0.06) 0%, transparent 50%),
-              radial-gradient(ellipse at 10% 10%, rgba(139,92,246,0.04) 0%, transparent 50%)`,
-          }}
         >
           {children}
         </motion.main>

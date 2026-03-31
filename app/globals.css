@@ -406,11 +406,69 @@
     animation: none !important;
   }
   .aurora-bg::before,
-  .aurora-bg::after {
+  .aurora-bg::after,
+  .aurora-app-bg::before,
+  .aurora-app-bg::after {
     animation: none !important;
   }
   .scan-line-overlay::after {
     animation: none !important;
+  }
+}
+
+/* ── Subtle aurora for authenticated app shell ── */
+@layer utilities {
+  .aurora-app-bg {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+  }
+  /* Primary aurora — very subtle indigo/violet */
+  .aurora-app-bg::before {
+    content: '';
+    position: absolute;
+    inset: -60%;
+    background:
+      conic-gradient(from 230deg at 51% 52%,
+        rgba(99,102,241,0.07) 0deg,
+        rgba(139,92,246,0.06) 67.5deg,
+        rgba(16,185,129,0.04) 135deg,
+        rgba(59,130,246,0.05) 202.5deg,
+        rgba(168,85,247,0.06) 270deg,
+        rgba(99,102,241,0.07) 360deg
+      );
+    animation: aurora-flow 20s ease-in-out infinite;
+    filter: blur(100px) saturate(1.2);
+    pointer-events: none;
+    will-change: transform;
+  }
+  /* Secondary aurora — subtle cyan/emerald tones */
+  .aurora-app-bg::after {
+    content: '';
+    position: absolute;
+    inset: -60%;
+    background:
+      conic-gradient(from 50deg at 40% 60%,
+        rgba(6,182,212,0.04) 0deg,
+        rgba(16,185,129,0.03) 90deg,
+        rgba(59,130,246,0.02) 180deg,
+        rgba(6,182,212,0.04) 360deg
+      );
+    animation: aurora-flow-2 28s ease-in-out infinite;
+    filter: blur(110px) saturate(1.1);
+    pointer-events: none;
+    will-change: transform;
+  }
+  /* Dot grid overlay for aurora-app-bg parent */
+  .aurora-app-dot-grid {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image: radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 32px 32px;
   }
 }
 
