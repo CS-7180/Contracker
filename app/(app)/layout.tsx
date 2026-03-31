@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { motion, useReducedMotion } from 'framer-motion'
+import { motion, useReducedMotion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard,
   FileText,
@@ -73,19 +73,52 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               const isActive = pathname === href || pathname.startsWith(href + '/')
               return (
                 <li key={href}>
-                  <Link
-                    href={href}
-                    aria-current={isActive ? 'page' : undefined}
-                    className={cn(
-                      'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200',
-                      isActive
-                        ? 'gradient-border-l bg-white/[0.08] text-sidebar-foreground text-glow-sm shadow-sm shadow-indigo-500/10'
-                        : 'text-sidebar-foreground/50 hover:text-sidebar-foreground/80 hover:bg-white/[0.04]'
-                    )}
+                  {/* Ambient glow pulse wrapper for active item */}
+                  <motion.div
+                    animate={
+                      isActive && !shouldReduceMotion
+                        ? {
+                            boxShadow: [
+                              '0 0 0px rgba(99,102,241,0)',
+                              '0 0 12px rgba(99,102,241,0.2)',
+                              '0 0 0px rgba(99,102,241,0)',
+                            ],
+                          }
+                        : {}
+                    }
+                    transition={{ duration: 2.5, repeat: Infinity }}
+                    className="rounded-lg"
                   >
-                    <Icon className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
-                    {label}
-                  </Link>
+                    <Link
+                      href={href}
+                      aria-current={isActive ? 'page' : undefined}
+                      className={cn(
+                        'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200',
+                        isActive
+                          ? 'gradient-border-l bg-white/[0.08] text-sidebar-foreground text-glow-sm shadow-sm shadow-indigo-500/10'
+                          : 'text-sidebar-foreground/50 hover:text-sidebar-foreground/80 hover:bg-white/[0.04]'
+                      )}
+                    >
+                      {/* Icon with hover rotate + scale */}
+                      <motion.span
+                        className="flex-shrink-0"
+                        whileHover={
+                          shouldReduceMotion ? {} : { rotate: 8, scale: 1.15 }
+                        }
+                        transition={{ duration: 0.2, type: 'spring' }}
+                      >
+                        <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
+                      </motion.span>
+
+                      {/* Label with hover nudge */}
+                      <motion.span
+                        whileHover={shouldReduceMotion ? {} : { x: 2 }}
+                        transition={{ duration: 0.15 }}
+                      >
+                        {label}
+                      </motion.span>
+                    </Link>
+                  </motion.div>
                 </li>
               )
             })}
@@ -112,13 +145,25 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {/* ── Main content ── */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Top header — glass effect */}
-        <header className="relative flex h-14 items-center justify-between border-b border-white/[0.06] px-6 backdrop-blur-xl"
+        <header
+          className="relative flex h-14 items-center justify-between border-b border-white/[0.06] px-6 backdrop-blur-xl"
           style={{ background: 'rgba(19, 19, 22, 0.6)' }}
         >
-          {/* Left: page icon + heading */}
+          {/* Left: page icon + animated heading */}
           <div className="flex items-center gap-2.5">
             <CurrentIcon className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-            <h1 className="text-sm font-display font-semibold text-foreground">{currentPage}</h1>
+            <AnimatePresence mode="wait">
+              <motion.h1
+                key={pathname}
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 6 }}
+                transition={{ duration: 0.2 }}
+                className="text-sm font-display font-semibold text-foreground"
+              >
+                {currentPage}
+              </motion.h1>
+            </AnimatePresence>
           </div>
 
           {/* Right: search, bell, avatar */}
@@ -128,7 +173,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </button>
             <button className="relative rounded-lg p-2 text-muted-foreground transition-colors hover:bg-white/[0.06] hover:text-foreground">
               <Bell className="h-4 w-4" />
-              <span
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: 'spring', stiffness: 260, damping: 20 }}
                 className={cn(
                   'absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-indigo-400',
                   !shouldReduceMotion && 'animate-badge-pulse'
@@ -140,8 +188,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </div>
           </div>
 
-          {/* Bottom gradient glow line */}
-          <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-indigo-500/30 to-transparent" />
+          {/* Bottom gradient glow line — sweeping beam effect */}
+          <div
+            className="absolute bottom-0 left-0 right-0 h-px animate-gradient-shift bg-gradient-to-r from-transparent via-indigo-500/30 to-transparent"
+            style={{ backgroundSize: '200% 100%' }}
+          />
         </header>
 
         {/* Animated page content */}

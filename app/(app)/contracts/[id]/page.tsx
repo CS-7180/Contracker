@@ -2,17 +2,12 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft, Edit2, FileDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { createClient } from '@/lib/supabase/server'
 import { formatDate, formatCurrency } from '@/lib/utils'
 import { getContractStatus, getRiskColour } from '@/lib/risk'
 import { DeleteContractButton } from '@/components/contracts/DeleteContractButton'
-
-const RISK_BADGE: Record<string, string> = {
-  green: 'border-emerald-500/20 bg-emerald-500/15 text-emerald-400',
-  amber: 'border-amber-500/20 bg-amber-500/15 text-amber-400',
-  red: 'border-red-500/20 bg-red-500/15 text-red-400',
-}
+import { ContractTimeline } from '@/components/contracts/ContractTimeline'
+import { RiskBadge } from '@/components/ui/RiskBadge'
 
 export default async function ContractDetailPage({
   params,
@@ -69,7 +64,7 @@ export default async function ContractDetailPage({
     new Date(contract.renewal_date),
     contract.notice_period_days
   )
-  const risk = getRiskColour(
+  const riskColour = getRiskColour(
     new Date(contract.renewal_date),
     contract.notice_period_days
   )
@@ -94,7 +89,7 @@ export default async function ContractDetailPage({
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Badge className={RISK_BADGE[risk]}>{status}</Badge>
+          <RiskBadge status={status} risk={riskColour} />
           <Button asChild variant="outline" size="sm">
             <Link href={`/contracts/${contract.id}/edit`}>
               <Edit2 className="mr-1.5 h-3.5 w-3.5" />
@@ -105,13 +100,21 @@ export default async function ContractDetailPage({
         </div>
       </div>
 
+      {/* Timeline */}
+      <ContractTimeline
+        startDate={contract.start_date}
+        endDate={contract.end_date}
+        renewalDate={contract.renewal_date}
+        riskColour={riskColour}
+      />
+
       {/* Contract details */}
       <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-5">
         <h3 className="mb-4 text-sm font-semibold text-foreground">Contract Details</h3>
-        <dl className="grid grid-cols-2 gap-x-8 gap-y-4 text-sm sm:grid-cols-3">
-          <div>
-            <dt className="text-muted-foreground">Supplier</dt>
-            <dd className="mt-1 text-foreground">
+        <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <div className="rounded-lg bg-white/[0.03] border border-white/[0.06] p-3">
+            <dt className="text-[10px] uppercase tracking-widest text-muted-foreground/60 mb-1">Supplier</dt>
+            <dd className="text-sm font-medium text-foreground">
               {contract.suppliers ? (
                 <Link
                   href={`/suppliers/${contract.suppliers.id}`}
@@ -124,33 +127,33 @@ export default async function ContractDetailPage({
               )}
             </dd>
           </div>
-          <div>
-            <dt className="text-muted-foreground">Type</dt>
-            <dd className="mt-1 capitalize text-foreground">{contract.type}</dd>
+          <div className="rounded-lg bg-white/[0.03] border border-white/[0.06] p-3">
+            <dt className="text-[10px] uppercase tracking-widest text-muted-foreground/60 mb-1">Type</dt>
+            <dd className="text-sm font-medium text-foreground capitalize">{contract.type}</dd>
           </div>
-          <div>
-            <dt className="text-muted-foreground">Category</dt>
-            <dd className="mt-1 text-foreground">{contract.category ?? '—'}</dd>
+          <div className="rounded-lg bg-white/[0.03] border border-white/[0.06] p-3">
+            <dt className="text-[10px] uppercase tracking-widest text-muted-foreground/60 mb-1">Category</dt>
+            <dd className="text-sm font-medium text-foreground">{contract.category ?? '—'}</dd>
           </div>
-          <div>
-            <dt className="text-muted-foreground">Start Date</dt>
-            <dd className="mt-1 text-foreground">{formatDate(contract.start_date)}</dd>
+          <div className="rounded-lg bg-white/[0.03] border border-white/[0.06] p-3">
+            <dt className="text-[10px] uppercase tracking-widest text-muted-foreground/60 mb-1">Start Date</dt>
+            <dd className="text-sm font-medium text-foreground">{formatDate(contract.start_date)}</dd>
           </div>
-          <div>
-            <dt className="text-muted-foreground">End Date</dt>
-            <dd className="mt-1 text-foreground">{formatDate(contract.end_date)}</dd>
+          <div className="rounded-lg bg-white/[0.03] border border-white/[0.06] p-3">
+            <dt className="text-[10px] uppercase tracking-widest text-muted-foreground/60 mb-1">End Date</dt>
+            <dd className="text-sm font-medium text-foreground">{formatDate(contract.end_date)}</dd>
           </div>
-          <div>
-            <dt className="text-muted-foreground">Renewal Date</dt>
-            <dd className="mt-1 text-foreground">{formatDate(contract.renewal_date)}</dd>
+          <div className="rounded-lg bg-white/[0.03] border border-white/[0.06] p-3">
+            <dt className="text-[10px] uppercase tracking-widest text-muted-foreground/60 mb-1">Renewal Date</dt>
+            <dd className="text-sm font-medium text-foreground">{formatDate(contract.renewal_date)}</dd>
           </div>
-          <div>
-            <dt className="text-muted-foreground">Notice Period</dt>
-            <dd className="mt-1 text-foreground">{contract.notice_period_days} days</dd>
+          <div className="rounded-lg bg-white/[0.03] border border-white/[0.06] p-3">
+            <dt className="text-[10px] uppercase tracking-widest text-muted-foreground/60 mb-1">Notice Period</dt>
+            <dd className="text-sm font-medium text-foreground">{contract.notice_period_days} days</dd>
           </div>
-          <div>
-            <dt className="text-muted-foreground">Contract Value</dt>
-            <dd className="mt-1 text-foreground">{formatCurrency(contract.value)}</dd>
+          <div className="rounded-lg bg-white/[0.03] border border-white/[0.06] p-3">
+            <dt className="text-[10px] uppercase tracking-widest text-muted-foreground/60 mb-1">Contract Value</dt>
+            <dd className="text-sm font-medium text-foreground">{formatCurrency(contract.value)}</dd>
           </div>
         </dl>
       </div>

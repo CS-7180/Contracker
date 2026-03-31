@@ -67,6 +67,16 @@ const config: Config = {
         sans: ['var(--font-geist-sans)'],
         display: ['var(--font-jakarta)', 'sans-serif'],
       },
+      animation: {
+        'gradient-shift': 'gradient-shift 4s ease infinite',
+        'scan-line': 'scan-line 5s ease-in-out infinite',
+        'flicker-in': 'flicker-in 0.4s ease-out forwards',
+        'float': 'float 3s ease-in-out infinite',
+        'border-flow': 'border-flow 4s linear infinite',
+      },
+      backdropBlur: {
+        '16': '16px',
+      },
     },
   },
   plugins: [require('tailwindcss-animate')],

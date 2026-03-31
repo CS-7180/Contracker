@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { Bell, FileText, CheckCheck, AlertTriangle, Clock, TrendingUp } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useToast } from '@/components/ui/use-toast'
 
 type NotificationThreshold = 7 | 30 | 60
 
@@ -125,6 +126,7 @@ export default function NotificationsPage() {
   const shouldReduceMotion = useReducedMotion()
   const [notifications, setNotifications] = useState<Notification[]>(MOCK_NOTIFICATIONS)
   const [filter, setFilter] = useState<FilterTab>('all')
+  const { toast } = useToast()
 
   const itemVariants = {
     hidden: { opacity: 0, x: shouldReduceMotion ? 0 : 20 },
@@ -141,13 +143,23 @@ export default function NotificationsPage() {
   const unreadCount = notifications.filter((n) => !n.isRead).length
 
   function markAsRead(id: string) {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
-    )
+    try {
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
+      )
+      toast({ title: 'Marked as read', duration: 2000 })
+    } catch {
+      toast({ title: 'Something went wrong', variant: 'destructive' })
+    }
   }
 
   function markAllAsRead() {
-    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))
+    try {
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))
+      toast({ title: 'All notifications marked as read' })
+    } catch {
+      toast({ title: 'Something went wrong', variant: 'destructive' })
+    }
   }
 
   return (
@@ -167,7 +179,7 @@ export default function NotificationsPage() {
         {unreadCount > 0 && (
           <motion.button
             onClick={markAllAsRead}
-            whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}
+            whileTap={shouldReduceMotion ? {} : { scale: 0.93, rotate: -3 }}
             className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-all duration-200 glass hover:text-foreground hover:bg-white/[0.08]"
           >
             <CheckCheck className="h-4 w-4" />
@@ -203,7 +215,16 @@ export default function NotificationsPage() {
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl glass">
-            <Bell className="h-8 w-8 text-muted-foreground/30" />
+            {shouldReduceMotion ? (
+              <Bell className="h-8 w-8 text-muted-foreground/30" />
+            ) : (
+              <motion.div
+                animate={{ y: [0, -4, 0] }}
+                transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
+              >
+                <Bell className="h-8 w-8 text-muted-foreground/30" />
+              </motion.div>
+            )}
           </div>
           <h3 className="text-lg font-display font-semibold text-foreground">All caught up</h3>
           <p className="mt-1 text-sm text-muted-foreground">No renewal alerts in this category.</p>
@@ -220,6 +241,11 @@ export default function NotificationsPage() {
             {filtered.map((notification) => {
               const config = getThresholdConfig(notification.threshold)
               const StatusIcon = config.icon
+              // Progress: how far through the threshold window we've burned
+              const progressPct = Math.min(
+                100,
+                ((notification.threshold - notification.daysRemaining) / notification.threshold) * 100
+              )
 
               return (
                 <motion.li
@@ -291,6 +317,23 @@ export default function NotificationsPage() {
                         </span>{' '}
                         — {notification.threshold}-day threshold reached.
                       </p>
+
+                      {/* Urgency progress bar */}
+                      <div className="mt-3 h-1 w-full overflow-hidden rounded-full bg-white/[0.06]">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${progressPct}%` }}
+                          transition={{ duration: 0.6, delay: 0.2 }}
+                          className={cn(
+                            'h-full rounded-full',
+                            notification.threshold === 7
+                              ? 'bg-red-500'
+                              : notification.threshold === 30
+                              ? 'bg-amber-500'
+                              : 'bg-emerald-500'
+                          )}
+                        />
+                      </div>
                     </div>
                   </div>
 
