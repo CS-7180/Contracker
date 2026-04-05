@@ -33,7 +33,24 @@ The Supabase project (`tsewqtqlpdxmpotxbcho`) was already created with:
 
 ### Supabase MCP — Setup & Demonstrated Workflow
 
-The Supabase MCP is configured at `.mcp.json`:
+#### How the MCP Server Was Added
+
+The Supabase MCP was registered using the `claude mcp add` CLI command:
+
+```bash
+claude mcp add --transport http --scope project supabase "https://mcp.supabase.com/mcp?project_ref=tsewqtqlpdxmpotxbcho"
+```
+
+**Flag breakdown:**
+- `--transport http` — tells Claude Code this is an HTTP-based MCP server (not a local stdio process)
+- `--scope project` — writes the config to `.mcp.json` in the project root, so all teammates get the server on `git pull`
+- `supabase` — the name used to reference this server inside Claude Code
+- The URL includes the Supabase project ref (`tsewqtqlpdxmpotxbcho`) which scopes all MCP operations to this project
+
+**First-use OAuth flow:** On the first MCP call, Claude Code opens a browser tab to `https://mcp.supabase.com/auth/...` for Supabase OAuth login. Once authenticated, the token is cached locally — subsequent sessions connect automatically.
+
+This writes the following entry to `.mcp.json`:
+
 ```json
 {
   "mcpServers": {
@@ -44,6 +61,21 @@ The Supabase MCP is configured at `.mcp.json`:
   }
 }
 ```
+
+#### Verification via `claude mcp list`
+
+After adding the server, `claude mcp list` confirms all MCP servers and their health:
+
+```
+Checking MCP server health...
+
+github:     docker run -i --rm -e GITHUB_PERSONAL_ACCESS_TOKEN ...  ✓ Connected
+playwright: npx @playwright/mcp@latest                              ✓ Connected
+supabase:   https://mcp.supabase.com/mcp?project_ref=...  (HTTP)   ! Needs authentication
+magic:      npx -y @21st-dev/magic@latest                           ✓ Connected
+```
+
+The `! Needs authentication` status is expected before OAuth login completes — after running `/mcp` in Claude Code and completing the browser flow, the status becomes `✓ Connected`.
 
 #### What MCP Enables
 Direct database interaction from within the Claude Code conversation — no manual copy-paste of SQL, no context-switching to the Supabase dashboard.
