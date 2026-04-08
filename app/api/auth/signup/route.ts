@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
-import { supabaseAdmin } from '@/lib/supabase/admin'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 const signupSchema = z.object({
   email: z.string().email(),
@@ -29,6 +29,7 @@ export async function POST(req: Request): Promise<NextResponse> {
 
   const { email, password, full_name } = parsed.data
 
+  const supabaseAdmin = createAdminClient()
   const { data: authData, error: createError } = await supabaseAdmin.auth.admin.createUser({
     email,
     password,
