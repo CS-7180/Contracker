@@ -27,6 +27,9 @@ export async function GET(_req: Request) {
   let active_count = 0
   let expiring_count = 0
   let expired_count = 0
+  let green_count = 0
+  let amber_count = 0
+  let red_count = 0
   let total_value = 0
   const expiring_soon: object[] = []
 
@@ -42,6 +45,11 @@ export async function GET(_req: Request) {
     else if (status === 'expiring') expiring_count++
     else expired_count++
 
+    const risk = getRiskColour(new Date(c.renewal_date), c.notice_period_days, today)
+    if (risk === 'green') green_count++
+    else if (risk === 'amber') amber_count++
+    else red_count++
+
     if (status !== 'expired') {
       total_value += c.value ?? 0
 
@@ -53,14 +61,14 @@ export async function GET(_req: Request) {
           end_date: c.end_date,
           notice_period_days: c.notice_period_days,
           value: c.value,
-          risk_colour: getRiskColour(new Date(c.renewal_date), c.notice_period_days, today),
+          risk_colour: risk,
         })
       }
     }
   }
 
   return NextResponse.json({
-    data: { active_count, expiring_count, expired_count, total_value, expiring_soon },
+    data: { active_count, expiring_count, expired_count, green_count, amber_count, red_count, total_value, expiring_soon },
     error: null,
   })
 }
