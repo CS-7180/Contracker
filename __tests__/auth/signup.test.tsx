@@ -1,8 +1,8 @@
 /**
  * SIGNUP PAGE TESTS — Issue #5 [M1.1]
  *
- * TDD RED  🔴 — these tests FAIL until the signup page is implemented.
- * TDD GREEN 🟢 — tests pass after implementation.
+ * TDD GREEN 🟢 — signup now routes through /api/auth/signup (server-side admin client)
+ * to bypass Supabase GoTrue domain allowlist restrictions.
  *
  * AC-01-2: Valid signup → session created, redirect to /dashboard
  * Signup creates a profiles row with role = 'admin' (handled by Supabase auth trigger)
@@ -19,15 +19,19 @@ vi.mock('next/navigation', () => ({
   usePathname: vi.fn(() => '/signup'),
 }))
 
-// Mock Supabase client
-const mockSignUp = vi.fn()
+// Mock Supabase client (used for signInWithPassword after account creation)
+const mockSignInWithPassword = vi.fn()
 vi.mock('@/lib/supabase/client', () => ({
   createClient: vi.fn(() => ({
     auth: {
-      signUp: mockSignUp,
+      signInWithPassword: mockSignInWithPassword,
     },
   })),
 }))
+
+// Mock global fetch (used to call /api/auth/signup)
+const mockFetch = vi.fn()
+vi.stubGlobal('fetch', mockFetch)
 
 import SignupPage from '@/app/(auth)/signup/page'
 
@@ -53,8 +57,12 @@ describe('Signup Page', () => {
     expect(link.getAttribute('href')).toBe('/login')
   })
 
-  it('calls supabase signUp with email, password, and full_name metadata', async () => {
-    mockSignUp.mockResolvedValueOnce({ data: { user: { id: '1' } }, error: null })
+  it('calls /api/auth/signup with email, password, and full_name on submit', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ data: { user: { id: '1', email: 'test@example.com' } }, error: null }),
+    })
+    mockSignInWithPassword.mockResolvedValueOnce({ error: null })
 
     render(<SignupPage />)
 
@@ -64,18 +72,20 @@ describe('Signup Page', () => {
     fireEvent.click(screen.getByRole('button', { name: /sign up/i }))
 
     await waitFor(() => {
-      expect(mockSignUp).toHaveBeenCalledWith({
-        email: 'test@example.com',
-        password: 'password123',
-        options: {
-          data: { full_name: 'Test User' },
-        },
+      expect(mockFetch).toHaveBeenCalledWith('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: 'test@example.com', password: 'password123', full_name: 'Test User' }),
       })
     })
   })
 
   it('redirects to /dashboard on successful signup', async () => {
-    mockSignUp.mockResolvedValueOnce({ data: { user: { id: '1' } }, error: null })
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ data: { user: { id: '1', email: 'test@example.com' } }, error: null }),
+    })
+    mockSignInWithPassword.mockResolvedValueOnce({ error: null })
 
     render(<SignupPage />)
 
@@ -89,10 +99,10 @@ describe('Signup Page', () => {
     })
   })
 
-  it('shows an error message when signup fails', async () => {
-    mockSignUp.mockResolvedValueOnce({
-      data: { user: null },
-      error: { message: 'User already registered' },
+  it('shows an error message when signup API returns an error', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      json: async () => ({ data: null, error: { message: 'An account with this email already exists', code: '409' } }),
     })
 
     render(<SignupPage />)
@@ -103,7 +113,7 @@ describe('Signup Page', () => {
     fireEvent.click(screen.getByRole('button', { name: /sign up/i }))
 
     await waitFor(() => {
-      expect(screen.getByText(/user already registered/i)).toBeDefined()
+      expect(screen.getByText(/an account with this email already exists/i)).toBeDefined()
     })
   })
 })

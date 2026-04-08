@@ -53,49 +53,45 @@ export default function SignupPage() {
     setLoading(true)
 
     try {
-      const supabase = createClient()
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { full_name: fullName },
-        },
+      // Create account via server-side API route (bypasses Supabase domain allowlist)
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, full_name: fullName }),
       })
+      const json = await res.json()
 
-      if (error) {
-        setError(error.message)
-        // Only show toast for non-credentials errors (generic/network errors)
+      if (!res.ok) {
+        const message = json.error?.message || 'Something went wrong'
+        setError(message)
         const isCredentialsError =
-          error.message.toLowerCase().includes('invalid') ||
-          error.message.toLowerCase().includes('credentials') ||
-          error.message.toLowerCase().includes('password') ||
-          error.message.toLowerCase().includes('email') ||
-          error.message.toLowerCase().includes('already')
+          message.toLowerCase().includes('invalid') ||
+          message.toLowerCase().includes('credentials') ||
+          message.toLowerCase().includes('password') ||
+          message.toLowerCase().includes('email') ||
+          message.toLowerCase().includes('already')
         if (!isCredentialsError) {
-          toast({
-            title: 'Something went wrong',
-            description: error.message,
-            variant: 'destructive',
-          })
+          toast({ title: 'Something went wrong', description: message, variant: 'destructive' })
         }
         setLoading(false)
         return
       }
 
-      toast({
-        title: 'Account created',
-        description: 'Welcome to Contracker!',
-      })
+      // Establish browser session (admin.createUser doesn't set cookies client-side)
+      const supabase = createClient()
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+      if (signInError) {
+        setError(signInError.message)
+        setLoading(false)
+        return
+      }
 
+      toast({ title: 'Account created', description: 'Welcome to Contracker!' })
       router.push('/dashboard')
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'An unexpected error occurred'
       setError(message)
-      toast({
-        title: 'Something went wrong',
-        description: message,
-        variant: 'destructive',
-      })
+      toast({ title: 'Something went wrong', description: message, variant: 'destructive' })
       setLoading(false)
     }
   }
