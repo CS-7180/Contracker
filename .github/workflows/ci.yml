@@ -149,15 +149,25 @@ jobs:
     name: AI Code Review
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
-    # Requires ANTHROPIC_API_KEY secret to be set in the repo
-    # Will skip gracefully if secret is absent (continue-on-error)
-    continue-on-error: true
     permissions:
       contents: read
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
+      - name: Check for Anthropic API key
+        id: check-key
+        env:
+          KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -z "$KEY" ]; then
+            echo "has_key=false" >> $GITHUB_OUTPUT
+            echo "⚠️  ANTHROPIC_API_KEY not configured — AI review skipped."
+            echo "    Add it to repo Settings → Secrets → Actions to enable."
+          else
+            echo "has_key=true" >> $GITHUB_OUTPUT
+          fi
       - uses: anthropics/claude-code-action@beta
+        if: steps.check-key.outputs.has_key == 'true'
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
