@@ -169,6 +169,88 @@ test.describe('AC-05: Dashboard data accuracy', () => {
   })
 })
 
+// ─── AC-06-5: Expiring-soon sorted red → amber → green ───────────────────────
+
+test.describe('AC-06-5: Expiring-soon sorted red → amber → green', () => {
+  test.skip(!hasAuth, 'E2E_EMAIL not configured — add to .env.test to enable')
+
+  let supplierId: string
+  let redContractId: string
+  let amberContractId: string
+
+  test.beforeAll(async ({ request }) => {
+    const sRes = await request.post('/api/suppliers', {
+      data: { name: 'E2E Risk Sort Supplier', category: 'E2E Testing' },
+    })
+    supplierId = (await sRes.json()).data?.id
+
+    const today = new Date()
+    const isoDate = (d: Date) => d.toISOString().split('T')[0]
+    const addDays = (n: number) => { const d = new Date(today); d.setDate(d.getDate() + n); return d }
+
+    // Red: renewal 10 days out, notice 30 → red
+    const cRedRes = await request.post('/api/contracts', {
+      data: {
+        name: 'E2E Red Risk Contract',
+        type: 'service',
+        supplier_id: supplierId,
+        start_date: isoDate(today),
+        end_date: isoDate(addDays(60)),
+        renewal_date: isoDate(addDays(10)),
+        notice_period_days: 30,
+        value: 1000,
+      },
+    })
+    redContractId = (await cRedRes.json()).data?.id
+
+    // Amber: renewal 25 days out, notice 10 → amber (25 > 10 but ≤ 60)
+    const cAmberRes = await request.post('/api/contracts', {
+      data: {
+        name: 'E2E Amber Risk Contract',
+        type: 'service',
+        supplier_id: supplierId,
+        start_date: isoDate(today),
+        end_date: isoDate(addDays(90)),
+        renewal_date: isoDate(addDays(25)),
+        notice_period_days: 10,
+        value: 2000,
+      },
+    })
+    amberContractId = (await cAmberRes.json()).data?.id
+  })
+
+  test.afterAll(async ({ request }) => {
+    if (redContractId) await request.delete(`/api/contracts/${redContractId}`)
+    if (amberContractId) await request.delete(`/api/contracts/${amberContractId}`)
+    if (supplierId) await request.delete(`/api/suppliers/${supplierId}`)
+  })
+
+  test('portfolio risk bar is rendered with red/amber/green counts (AC-06-5)', async ({ page }) => {
+    await page.goto('/dashboard')
+    await expect(page.getByTestId('portfolio-risk-bar')).toBeVisible({ timeout: 10000 })
+    // Bar should show traffic-light labels
+    await expect(page.getByTestId('portfolio-risk-bar').getByText(/green/i)).toBeVisible()
+    await expect(page.getByTestId('portfolio-risk-bar').getByText(/amber/i)).toBeVisible()
+    await expect(page.getByTestId('portfolio-risk-bar').getByText(/red/i)).toBeVisible()
+  })
+
+  test('red contract appears before amber in expiring-soon list (AC-06-5)', async ({ page }) => {
+    await page.goto('/dashboard')
+    await expect(page.getByText(/e2e red risk contract/i)).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText(/e2e amber risk contract/i)).toBeVisible()
+
+    const redIndex = await page.getByText(/e2e red risk contract/i).evaluate((el) => {
+      const items = Array.from(document.querySelectorAll('li'))
+      return items.findIndex((li) => li.textContent?.includes('E2E Red Risk Contract'))
+    })
+    const amberIndex = await page.getByText(/e2e amber risk contract/i).evaluate((el) => {
+      const items = Array.from(document.querySelectorAll('li'))
+      return items.findIndex((li) => li.textContent?.includes('E2E Amber Risk Contract'))
+    })
+    expect(redIndex).toBeLessThan(amberIndex)
+  })
+})
+
 // ─── Expiring-soon empty state ─────────────────────────────────────────────────
 
 test.describe('Dashboard — expiring-soon empty state', () => {

@@ -284,3 +284,52 @@ test.describe('Supplier edit form — /suppliers/[id]/edit', () => {
     await expect(page.getByText('After Edit')).toBeVisible()
   })
 })
+
+// ─── AC-06-4: Supplier risk roll-up badge ─────────────────────────────────────
+
+test.describe('AC-06-4: Supplier risk roll-up badge', () => {
+  test.skip(!hasAuth, 'E2E_EMAIL not configured — add to .env.test to enable')
+
+  let supplierId: string
+  let redContractId: string
+
+  test.beforeAll(async ({ request }) => {
+    const sRes = await request.post('/api/suppliers', {
+      data: { name: 'E2E Risk Badge Supplier', category: 'E2E Testing' },
+    })
+    supplierId = (await sRes.json()).data?.id
+
+    const today = new Date()
+    const isoDate = (d: Date) => d.toISOString().split('T')[0]
+    const addDays = (n: number) => { const d = new Date(today); d.setDate(d.getDate() + n); return d }
+
+    // Red contract: renewal 10 days out, notice 30 → red
+    const cRes = await request.post('/api/contracts', {
+      data: {
+        name: 'E2E Risk Badge Red Contract',
+        type: 'service',
+        supplier_id: supplierId,
+        start_date: isoDate(today),
+        end_date: isoDate(addDays(60)),
+        renewal_date: isoDate(addDays(10)),
+        notice_period_days: 30,
+        value: 1000,
+      },
+    })
+    redContractId = (await cRes.json()).data?.id
+  })
+
+  test.afterAll(async ({ request }) => {
+    if (redContractId) await request.delete(`/api/contracts/${redContractId}`)
+    if (supplierId) await request.delete(`/api/suppliers/${supplierId}`)
+  })
+
+  test('supplier with red contract shows red risk badge on supplier list (AC-06-4)', async ({ page }) => {
+    await page.goto('/suppliers')
+    // Find the row for this supplier
+    const row = page.locator('tr').filter({ hasText: 'E2E Risk Badge Supplier' })
+    await expect(row).toBeVisible({ timeout: 10000 })
+    // The risk badge column should show "Red" text label
+    await expect(row.getByText(/^red$/i)).toBeVisible()
+  })
+})
