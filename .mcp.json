@@ -17,7 +17,7 @@
         "@21st-dev/magic@latest"
       ],
       "env": {
-        "TWENTY_FIRST_DEV_API_KEY": "61ec1e204bb91facd00a333cd258ea17cc8ce100f637c68175492cfed6040a48"
+        "TWENTY_FIRST_DEV_API_KEY": "${TWENTY_FIRST_DEV_API_KEY}"
       }
     }
   }
