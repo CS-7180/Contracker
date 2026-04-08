@@ -1,0 +1,8 @@
+# Gitleaks ignore file
+# Suppressed findings are historical secrets that have been rotated and
+# removed from the working tree. They cannot be expunged from git history
+# without a full history rewrite, so they are suppressed here instead.
+
+# 21st.dev Magic MCP API key — committed in initial MCP setup (commit a022629).
+# Key has been rotated. Value replaced with env var placeholder in .mcp.json.
+a0226290592e7fa0377cbe5010e0e0b43e3dd881:.mcp.json:generic-api-key:20
