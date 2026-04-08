@@ -27,6 +27,9 @@ type DashboardData = {
   active_count: number
   expiring_count: number
   expired_count: number
+  green_count: number
+  amber_count: number
+  red_count: number
   total_value: number
   expiring_soon: Array<{
     id: string
@@ -157,45 +160,33 @@ function formatRelativeTime(iso: string): string {
   return `${Math.floor(hours / 24)}d ago`
 }
 
-function RiskDistributionBar({ active, expiring, expired }: { active: number; expiring: number; expired: number }) {
-  const total = active + expiring + expired
+function PortfolioRiskBar({ green, amber, red }: { green: number; amber: number; red: number }) {
+  const total = green + amber + red
   if (total === 0) return null
-  const segments = [
-    { label: 'Active', count: active, pct: (active / total) * 100, color: 'bg-emerald-500', status: 'active' },
-    { label: 'Expiring', count: expiring, pct: (expiring / total) * 100, color: 'bg-amber-500', status: 'expiring' },
-    { label: 'Expired', count: expired, pct: (expired / total) * 100, color: 'bg-red-500', status: 'expired' },
+  const tiles = [
+    { label: 'Green', count: green, hex: '#16a34a', textColor: 'text-emerald-400', borderColor: 'border-emerald-500/30', bg: 'bg-emerald-500/10' },
+    { label: 'Amber', count: amber, hex: '#d97706', textColor: 'text-amber-400', borderColor: 'border-amber-500/30', bg: 'bg-amber-500/10' },
+    { label: 'Red',   count: red,   hex: '#dc2626', textColor: 'text-red-400',    borderColor: 'border-red-500/30',    bg: 'bg-red-500/10' },
   ]
   return (
-    <div className="rounded-xl glass p-4">
+    <div className="rounded-xl glass p-4" data-testid="portfolio-risk-bar">
       <div className="mb-3 flex items-center justify-between">
-        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Portfolio Risk Distribution</p>
+        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Portfolio Risk</p>
         <p className="text-xs text-muted-foreground">{total} contracts</p>
       </div>
-      <div className="flex h-3 overflow-hidden rounded-full gap-0.5">
-        {segments.map(({ label, pct, color, count, status }) =>
-          count > 0 ? (
-            <Link key={label} href={`/contracts?status=${status}`} title={`View ${label} contracts`}>
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${pct}%` }}
-                transition={{ duration: 0.8, delay: 0.6, ease: 'easeOut' }}
-                className={cn('h-full rounded-full cursor-pointer hover:brightness-125 transition-all', color)}
-                style={{ width: `${pct}%` }}
-                title={`${label}: ${count} (${pct.toFixed(0)}%)`}
-              />
-            </Link>
-          ) : null,
-        )}
-      </div>
-      <div className="mt-2 flex gap-4">
-        {segments.map(({ label, count, pct, color, status }) => (
-          <Link key={label} href={`/contracts?status=${status}`} className="flex items-center gap-1.5 hover:opacity-80 transition-opacity">
-            <span className={cn('h-2 w-2 rounded-full', color)} />
-            <span className="text-[11px] text-muted-foreground">
-              {label} <span className="font-medium text-foreground">{count}</span>
-              <span className="ml-1 text-muted-foreground/60">({pct.toFixed(0)}%)</span>
-            </span>
-          </Link>
+      <div className="grid grid-cols-3 gap-2">
+        {tiles.map(({ label, count, hex: _hex, textColor, borderColor, bg }) => (
+          <motion.div
+            key={label}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4, delay: 0.5 }}
+            className={cn('flex flex-col items-center justify-center rounded-lg border py-3', borderColor, bg)}
+          >
+            <RiskIndicator colour={label.toLowerCase() as RiskColour} size="sm" />
+            <span className={cn('mt-1.5 text-xl font-display font-bold', textColor)}>{count}</span>
+            <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{label}</span>
+          </motion.div>
         ))}
       </div>
     </div>
@@ -548,17 +539,17 @@ export default function DashboardPage() {
             ))}
           </motion.div>
 
-          {/* Risk distribution bar */}
+          {/* Portfolio risk summary bar (traffic-light counts) */}
           {!loading && data && (
             <motion.div
               initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4, duration: 0.4 }}
             >
-              <RiskDistributionBar
-                active={data.active_count}
-                expiring={data.expiring_count}
-                expired={data.expired_count}
+              <PortfolioRiskBar
+                green={data.green_count}
+                amber={data.amber_count}
+                red={data.red_count}
               />
             </motion.div>
           )}
@@ -605,7 +596,12 @@ export default function DashboardPage() {
                   animate="visible"
                   className="divide-y divide-white/[0.04]"
                 >
-                  {data.expiring_soon.map((contract) => {
+                  {[...data.expiring_soon]
+                    .sort((a, b) => {
+                      const order: Record<RiskColour, number> = { red: 0, amber: 1, green: 2 }
+                      return order[a.risk_colour] - order[b.risk_colour]
+                    })
+                    .map((contract) => {
                     const days = daysUntil(contract.renewal_date)
                     return (
                       <motion.li
