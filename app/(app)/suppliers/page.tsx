@@ -3,6 +3,9 @@ import { Plus, Building2, ArrowRight, Mail } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/server'
 import { SuppliersSearch } from '@/components/suppliers/SuppliersSearch'
+import { RiskIndicator } from '@/components/ui/RiskIndicator'
+import { getRiskColour } from '@/lib/risk'
+import type { RiskColour } from '@/lib/risk'
 import { cn } from '@/lib/utils'
 
 interface PageProps {
@@ -23,20 +26,35 @@ export default async function SuppliersPage({ searchParams }: PageProps) {
   const search = searchParams.search as string | undefined
 
   let query = (supabase.from('suppliers') as any)
-    .select('id, name, category, status, contact_email')
+    .select('id, name, category, status, contact_email, contracts(renewal_date, notice_period_days, end_date)')
     .order('name')
 
   if (search) query = query.ilike('name', `%${search}%`)
 
-  const { data: suppliers } = await query as {
+  const { data: rawSuppliers } = await query as {
     data: Array<{
       id: string
       name: string
       category: string | null
       status: string
       contact_email: string | null
+      contracts: Array<{ renewal_date: string; notice_period_days: number; end_date: string }>
     }> | null
   }
+
+  const today = new Date()
+  const suppliers = rawSuppliers?.map(({ contracts, ...s }) => {
+    let max_contract_risk: RiskColour | null = null
+    if (contracts && contracts.length > 0) {
+      const risks = contracts.map((c) =>
+        getRiskColour(new Date(c.renewal_date), c.notice_period_days, today)
+      )
+      max_contract_risk = risks.includes('red') ? 'red'
+        : risks.includes('amber') ? 'amber'
+        : 'green'
+    }
+    return { ...s, max_contract_risk }
+  }) ?? null
 
   return (
     <div className="space-y-6">
@@ -101,6 +119,9 @@ export default async function SuppliersPage({ searchParams }: PageProps) {
                 </th>
                 <th className="px-5 py-3.5 text-left">
                   <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground/60">Status</span>
+                </th>
+                <th className="px-5 py-3.5 text-left">
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground/60">Contract Risk</span>
                 </th>
                 <th className="px-5 py-3.5" />
               </tr>
@@ -178,6 +199,23 @@ export default async function SuppliersPage({ searchParams }: PageProps) {
                         )} />
                         {isActive ? 'Active' : 'Inactive'}
                       </span>
+                    </td>
+
+                    {/* Contract risk roll-up badge */}
+                    <td className="px-5 py-4">
+                      {s.max_contract_risk === 'red' || s.max_contract_risk === 'amber' ? (
+                        <span className="flex items-center gap-1.5">
+                          <RiskIndicator colour={s.max_contract_risk} size="sm" data-testid={`supplier-risk-${s.max_contract_risk}`} />
+                          <span className={cn(
+                            'text-[11px] font-medium capitalize',
+                            s.max_contract_risk === 'red' ? 'text-red-400' : 'text-amber-400'
+                          )}>
+                            {s.max_contract_risk}
+                          </span>
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground/30">—</span>
+                      )}
                     </td>
 
                     {/* Arrow */}
