@@ -10,11 +10,14 @@ env:
   NODE_VERSION: '20'
 
 jobs:
+  # ── Stage 1: Lint & Type Check ────────────────────────────────────────────
   lint:
     name: Lint & Type Check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -23,6 +26,7 @@ jobs:
       - run: npm run lint
       - run: npm run type-check
 
+  # ── Stage 2: Unit & Integration Tests ────────────────────────────────────
   test:
     name: Unit & Integration Tests
     runs-on: ubuntu-latest
@@ -49,6 +53,7 @@ jobs:
           [ -n "$V5" ] && echo "NEXT_PUBLIC_SENTRY_DSN=$V5" >> .env.test || true
       - run: npm test
 
+  # ── Stage 3: Production Build ─────────────────────────────────────────────
   build:
     name: Build
     runs-on: ubuntu-latest
@@ -65,3 +70,131 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - run: npm run build
+
+  # ── Stage 4: E2E Tests (Playwright) ──────────────────────────────────────
+  e2e:
+    name: E2E Tests (Playwright)
+    runs-on: ubuntu-latest
+    needs: [build]
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+      NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+      - name: Create .env.test from secrets
+        env:
+          V1: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          V2: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          V3: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          V4: ${{ secrets.RESEND_API_KEY }}
+          V5: ${{ secrets.SENTRY_DSN }}
+          V6: ${{ secrets.E2E_EMAIL }}
+          V7: ${{ secrets.E2E_PASSWORD }}
+        run: |
+          [ -n "$V1" ] && echo "NEXT_PUBLIC_SUPABASE_URL=$V1" >> .env.test || true
+          [ -n "$V2" ] && echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$V2" >> .env.test || true
+          [ -n "$V3" ] && echo "SUPABASE_SERVICE_ROLE_KEY=$V3" >> .env.test || true
+          [ -n "$V4" ] && echo "RESEND_API_KEY=$V4" >> .env.test || true
+          [ -n "$V5" ] && echo "SENTRY_DSN=$V5" >> .env.test || true
+          [ -n "$V5" ] && echo "NEXT_PUBLIC_SENTRY_DSN=$V5" >> .env.test || true
+          [ -n "$V6" ] && echo "E2E_EMAIL=$V6" >> .env.test || true
+          [ -n "$V7" ] && echo "E2E_PASSWORD=$V7" >> .env.test || true
+      - name: Run Playwright E2E tests
+        run: npm run test:e2e
+      - name: Upload Playwright report on failure
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+  # ── Stage 5: Security Scan ────────────────────────────────────────────────
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci
+      - name: Dependency vulnerability scan (npm audit)
+        # Fails on high or critical severity vulnerabilities in production deps
+        run: npm audit --audit-level=high --omit=dev
+      - name: Secrets detection (Gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ── Stage 6: AI PR Review (Claude Code) ──────────────────────────────────
+  ai-review:
+    name: AI Code Review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    # Requires ANTHROPIC_API_KEY secret to be set in the repo
+    # Will skip gracefully if secret is absent (continue-on-error)
+    continue-on-error: true
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          direct_prompt: |
+            Review this pull request against the Contracker CLAUDE.md conventions.
+
+            Check and report on:
+            1. **Security** — Zod validation on all new API route inputs; `supabase.auth.getUser()` present; role check on admin-only routes; no secrets in response bodies.
+            2. **TDD compliance** — a `test:` commit must precede any `feat:` commit for the same feature in this PR.
+            3. **API shape** — all responses use `{ data, error }` format consistently.
+            4. **TypeScript** — explicit return types on all functions in `lib/`.
+            5. **CLAUDE.md rules** — status never stored in DB; `today` injected in date functions; no `console.log` in production code.
+
+            Format your response as a C.L.E.A.R. review:
+            - **Context:** what this PR changes
+            - **Logic:** key implementation decisions
+            - **Edge cases:** what was handled or might be missed
+            - **Assertions:** which tests cover the changes
+            - **Risks:** anything that could break in production
+
+  # ── Stage 7: Lighthouse Performance Gate ─────────────────────────────────
+  perf-gate:
+    name: Lighthouse Performance Gate
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    needs: [build]
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+      NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci
+      - name: Build Next.js app
+        run: npm run build
+      - name: Run Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v12
+        with:
+          configPath: ./lighthouserc.js
+          uploadArtifacts: true
+          temporaryPublicStorage: true
