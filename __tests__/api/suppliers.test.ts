@@ -18,6 +18,13 @@ vi.mock('@/lib/supabase/server', () => ({
 
 import { createClient } from '@/lib/supabase/server'
 import { GET as getSuppliers, POST as postSupplier } from '@/app/api/suppliers/route'
+
+/** Returns an ISO date string N days from today (negative = past). */
+function addDays(days: number): string {
+  const d = new Date()
+  d.setDate(d.getDate() + days)
+  return d.toISOString().split('T')[0]
+}
 import {
   GET as getSupplier,
   PUT as putSupplier,
@@ -78,10 +85,11 @@ describe('GET /api/suppliers', () => {
   })
 
   it('returns list of active suppliers when authenticated', async () => {
+    const supplierWithNoContracts = { ...mockSupplier, contracts: [] }
     const qb = {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
-      order: vi.fn().mockResolvedValue({ data: [mockSupplier], error: null }),
+      order: vi.fn().mockResolvedValue({ data: [supplierWithNoContracts], error: null }),
     }
     mockCreateClient.mockReturnValue({ ...authClient('user-1'), from: vi.fn().mockReturnValue(qb) } as any)
 
@@ -91,6 +99,59 @@ describe('GET /api/suppliers', () => {
     expect(body.data).toHaveLength(1)
     expect(body.data[0].name).toBe('Acme Corp')
     expect(body.error).toBeNull()
+  })
+
+  // ── max_contract_risk roll-up (AC-06-4) ─────────────────────────────────────
+
+  it('includes max_contract_risk field on each supplier (AC-06-4)', async () => {
+    const supplierWithRedContract = {
+      ...mockSupplier,
+      contracts: [{ renewal_date: addDays(10), notice_period_days: 30, end_date: addDays(60) }],
+    }
+    const qb = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      order: vi.fn().mockResolvedValue({ data: [supplierWithRedContract], error: null }),
+    }
+    mockCreateClient.mockReturnValue({ ...authClient('user-1'), from: vi.fn().mockReturnValue(qb) } as any)
+
+    const res = await getSuppliers(new Request('http://localhost/api/suppliers'))
+    const body = await res.json()
+    expect(body.data[0]).toHaveProperty('max_contract_risk')
+    // 10 days <= notice_period 30 → red
+    expect(body.data[0].max_contract_risk).toBe('red')
+  })
+
+  it('returns max_contract_risk = amber when worst contract is amber', async () => {
+    const supplierWithAmberContract = {
+      ...mockSupplier,
+      contracts: [{ renewal_date: addDays(50), notice_period_days: 30, end_date: addDays(120) }],
+    }
+    const qb = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      order: vi.fn().mockResolvedValue({ data: [supplierWithAmberContract], error: null }),
+    }
+    mockCreateClient.mockReturnValue({ ...authClient('user-1'), from: vi.fn().mockReturnValue(qb) } as any)
+
+    const res = await getSuppliers(new Request('http://localhost/api/suppliers'))
+    const body = await res.json()
+    // 50 days > notice(30) but <= 60 → amber
+    expect(body.data[0].max_contract_risk).toBe('amber')
+  })
+
+  it('returns max_contract_risk = null when supplier has no contracts', async () => {
+    const supplierNoContracts = { ...mockSupplier, contracts: [] }
+    const qb = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      order: vi.fn().mockResolvedValue({ data: [supplierNoContracts], error: null }),
+    }
+    mockCreateClient.mockReturnValue({ ...authClient('user-1'), from: vi.fn().mockReturnValue(qb) } as any)
+
+    const res = await getSuppliers(new Request('http://localhost/api/suppliers'))
+    const body = await res.json()
+    expect(body.data[0].max_contract_risk).toBeNull()
   })
 })
 
