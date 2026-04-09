@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { Bell, FileText, CheckCheck, AlertTriangle, Clock, TrendingUp } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -17,54 +17,6 @@ interface Notification {
   isRead: boolean
   createdAt: string
 }
-
-const MOCK_NOTIFICATIONS: Notification[] = [
-  {
-    id: '1',
-    contractName: 'Azure Cloud Services Agreement',
-    supplierName: 'Microsoft Corp',
-    daysRemaining: 6,
-    threshold: 7,
-    isRead: false,
-    createdAt: '2026-03-29T09:15:00Z',
-  },
-  {
-    id: '2',
-    contractName: 'Salesforce CRM Enterprise License',
-    supplierName: 'Salesforce Inc',
-    daysRemaining: 28,
-    threshold: 30,
-    isRead: false,
-    createdAt: '2026-03-29T08:00:00Z',
-  },
-  {
-    id: '3',
-    contractName: 'Office 365 Business Premium',
-    supplierName: 'Microsoft Corp',
-    daysRemaining: 7,
-    threshold: 7,
-    isRead: false,
-    createdAt: '2026-03-28T14:30:00Z',
-  },
-  {
-    id: '4',
-    contractName: 'AWS Infrastructure Services',
-    supplierName: 'Amazon Web Services',
-    daysRemaining: 58,
-    threshold: 60,
-    isRead: true,
-    createdAt: '2026-03-27T11:00:00Z',
-  },
-  {
-    id: '5',
-    contractName: 'Slack Business+ Subscription',
-    supplierName: 'Salesforce Inc',
-    daysRemaining: 29,
-    threshold: 30,
-    isRead: true,
-    createdAt: '2026-03-26T16:45:00Z',
-  },
-]
 
 type FilterTab = 'all' | 'unread' | 'read'
 
@@ -124,7 +76,9 @@ const containerVariants = {
 
 export default function NotificationsPage() {
   const shouldReduceMotion = useReducedMotion()
-  const [notifications, setNotifications] = useState<Notification[]>(MOCK_NOTIFICATIONS)
+  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState<string | null>(null)
   const [filter, setFilter] = useState<FilterTab>('all')
   const { toast } = useToast()
 
@@ -134,6 +88,43 @@ export default function NotificationsPage() {
     exit: { opacity: 0, x: shouldReduceMotion ? 0 : -16, transition: { duration: 0.2 } },
   }
 
+  useEffect(() => {
+    async function fetchNotifications() {
+      try {
+        const res = await fetch('/api/notifications')
+        const json = await res.json()
+        if (!res.ok || json.error) {
+          setFetchError(json.error?.message ?? 'Failed to load notifications')
+          return
+        }
+        const today = new Date()
+        setNotifications(
+          (json.data ?? []).map((n: any) => ({
+            id: n.id,
+            contractName: n.contracts?.name ?? 'Unknown contract',
+            supplierName: n.contracts?.suppliers?.name ?? 'Unknown supplier',
+            daysRemaining: n.contracts?.renewal_date
+              ? Math.max(
+                  0,
+                  Math.round(
+                    (new Date(n.contracts.renewal_date).getTime() - today.getTime()) / 86_400_000
+                  )
+                )
+              : 0,
+            threshold: n.threshold_days as NotificationThreshold,
+            isRead: n.is_read,
+            createdAt: n.created_at,
+          }))
+        )
+      } catch {
+        setFetchError('Failed to load notifications')
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchNotifications()
+  }, [])
+
   const filtered = notifications.filter((n) => {
     if (filter === 'unread') return !n.isRead
     if (filter === 'read') return n.isRead
@@ -142,8 +133,10 @@ export default function NotificationsPage() {
 
   const unreadCount = notifications.filter((n) => !n.isRead).length
 
-  function markAsRead(id: string) {
+  async function markAsRead(id: string) {
     try {
+      const res = await fetch(`/api/notifications/${id}`, { method: 'PUT' })
+      if (!res.ok) throw new Error()
       setNotifications((prev) =>
         prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
       )
@@ -153,13 +146,41 @@ export default function NotificationsPage() {
     }
   }
 
-  function markAllAsRead() {
+  async function markAllAsRead() {
     try {
+      const unread = notifications.filter((n) => !n.isRead)
+      await Promise.all(
+        unread.map((n) => fetch(`/api/notifications/${n.id}`, { method: 'PUT' }))
+      )
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))
       toast({ title: 'All notifications marked as read' })
     } catch {
       toast({ title: 'Something went wrong', variant: 'destructive' })
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-3xl space-y-3">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="h-28 rounded-xl glass animate-pulse" />
+        ))}
+      </div>
+    )
+  }
+
+  if (fetchError) {
+    return (
+      <div className="mx-auto max-w-3xl">
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <AlertTriangle className="mb-4 h-12 w-12 text-red-400" />
+          <h3 className="text-lg font-display font-semibold text-foreground">
+            Failed to load notifications
+          </h3>
+          <p className="mt-1 text-sm text-muted-foreground">{fetchError}</p>
+        </div>
+      </div>
+    )
   }
 
   return (
