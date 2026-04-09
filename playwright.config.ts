@@ -76,6 +76,17 @@ export default defineConfig({
       },
       dependencies: ['setup'],
     },
+
+    // Compliance page tests (authenticated + unauthenticated redirect)
+    {
+      name: 'compliance-pages',
+      testMatch: /compliance\.spec\.ts/,
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: 'e2e/.auth/user.json',
+      },
+      dependencies: ['setup'],
+    },
   ],
 
   // Automatically start the Next.js dev server
