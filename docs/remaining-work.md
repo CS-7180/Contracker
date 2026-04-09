@@ -1,6 +1,6 @@
 # Remaining Work — Analysis & Plan
 
-**Date:** 2026-04-09 (updated Phase 2 wrap-up)
+**Date:** 2026-04-09 (updated Phase 3 complete)
 **Due:** 2026-04-22 (13 days remaining)
 **Owner:** Vineela Goli (Sprint 3)
 
@@ -8,7 +8,9 @@
 
 ## Current Branch State
 
-`main` is the integration branch. All new work branches off `main` as `feature/[issue-number]-short-description`. Two branches currently have open PRs awaiting merge.
+`main` is the integration branch. All new work branches off `main` as `feature/[issue-number]-short-description`.
+
+Phase 3 branches merged: `feature/28-29-spend` (PR #60) and `feature/30-31-certifications` (PR #61) both merged 2026-04-09.
 
 ---
 
@@ -41,16 +43,16 @@
 ### Sprint 2 (all closed ✅)
 Issues #19–#25 closed on merge of PRs #57 and #58. Issue #26 open for QA sign-off.
 
-### Sprint 3 (not started)
-| # | Title | Labels |
+### Sprint 3
+| # | Title | Status |
 |---|-------|--------|
-| 27 | [M3.0] Configure Resend and implement email renewal alerts | sprint-3, tdd |
-| 28 | [M3.1] Implement GET /api/spend endpoint | sprint-3, tdd, api |
-| 29 | [M3.1] Build spend tracking page with Recharts bar chart | sprint-3, ui |
-| 30 | [M3.2] Implement certification CRUD with computed status | sprint-3, tdd, api |
-| 31 | [M3.2] Build compliance page with supplier certification traffic lights | sprint-3, ui |
-| 32 | [M3.3] Build team settings page and member invitation flow | sprint-3, tdd, admin-only, api |
-| 33 | [M3.4] Final QA, OWASP security audit, Lighthouse CI gate, and production deploy | sprint-3, security |
+| 27 | [M3.0] Configure Resend and implement email renewal alerts | ❌ Open |
+| 28 | [M3.1] Implement GET /api/spend endpoint | ✅ Closed (PR #60 merged) |
+| 29 | [M3.1] Build spend tracking page with Recharts bar chart | ✅ Closed (PR #60 merged) |
+| 30 | [M3.2] Implement certification CRUD with computed status | ✅ Closed (PR #61 merged) |
+| 31 | [M3.2] Build compliance page with supplier certification traffic lights | ✅ Closed (PR #61 merged) |
+| 32 | [M3.3] Build team settings page and member invitation flow | ❌ Open |
+| 33 | [M3.4] Final QA, OWASP security audit, Lighthouse CI gate, and production deploy | ❌ Open |
 
 ---
 
@@ -66,19 +68,15 @@ Issues #19–#25 closed on merge of PRs #57 and #58. Issue #26 open for QA sign-
 | Notifications: in-app bell with live unread count | ✅ PR #58 |
 | Notifications: `/api/notifications` GET + PUT implemented | ✅ PR #58 |
 | Notifications: cron inserts at 60/30/7 day thresholds | ✅ PR #58 (`/api/cron/notifications`) |
-| Spend: `/api/spend` endpoint + page with Recharts bar chart | ❌ Issue #28, #29 |
-| Compliance: certification CRUD API + compliance page with traffic lights | ❌ Issue #30, #31 |
+| Spend: `/api/spend` endpoint + page with Recharts bar chart | ✅ Merged (PR #60) |
+| Compliance: certification CRUD API + compliance page with traffic lights | ✅ Merged (PR #61) |
 | Team settings: member invitation flow (Admin only) | ❌ Issue #32 |
 
 **Remaining page stubs on `main`:**
-- `app/(app)/spend/page.tsx` → `ComingSoonPage`
-- `app/(app)/compliance/page.tsx` → `ComingSoonPage`
-- `app/(app)/settings/team/page.tsx` → `ComingSoonPage`
-- `app/api/certifications/route.ts` → 501 Not Implemented
-- `app/api/spend/route.ts` → 501 Not Implemented
-- `app/api/team/route.ts` → 501 Not Implemented
+- `app/(app)/settings/team/page.tsx` → `ComingSoonPage` (issue #32)
+- `app/api/team/route.ts` → 501 Not Implemented (issue #32)
 
-*(Notifications stubs resolved in PR #58 — pending merge)*
+*(Spend and compliance stubs resolved in PRs #60 and #61 — merged 2026-04-09)*
 
 ---
 
@@ -112,7 +110,7 @@ Issues #19–#25 closed on merge of PRs #57 and #58. Issue #26 open for QA sign-
 | Unit + integration tests (Vitest) | ✅ | `__tests__/lib/`, `__tests__/api/` |
 | E2E tests (Playwright) | ✅ | contracts, suppliers, dashboard, notifications specs |
 | 70%+ test coverage | ❓ | Coverage report not yet generated — verify before Phase 6 |
-| TDD for Sprint 3 features | ❌ | Issues #27–#32 not yet started |
+| TDD for Sprint 3 features | ⏳ | Issues #28–#31 TDD complete (merged); #27, #32 remaining |
 
 ---
 
@@ -186,30 +184,16 @@ Security gates:
 
 ---
 
-### Phase 3 — Sprint 3: Spend + Certifications (Apr 12–14)
+### Phase 3 — Sprint 3: Spend + Certifications ✅ DONE (Apr 9)
 
-Use **parallel worktrees** again.
+- PR #60 (`feature/28-29-spend`) merged — `GET /api/spend`, spend page, Recharts bar chart, E2E spec (issues #28, #29)
+- PR #61 (`feature/30-31-certifications`) merged — certification CRUD API + compliance page with traffic lights, E2E spec (issues #30, #31)
+- All 174 tests passing (`.env.test` created to fix pre-existing scaffolding failures)
+- Security hardening applied: error leakage fixed, UUID param validation, cross-field validation for `period=custom`
+- `security-reviewer` agent run on both route files before PRs opened
+- Playwright E2E specs: `e2e/spend.spec.ts` and `e2e/compliance.spec.ts`
 
-**Track A: `feature/28-29-spend`**
-- TDD: `GET /api/spend` — totals by supplier and category, date filter (AC-09-x)
-- Spend page: supplier breakdown table + category breakdown table
-- Recharts bar chart — top 10 suppliers (invoke `/chart-guide` skill)
-- Year filter
-- Use `test-writer` agent for red commit, `security-reviewer` before PR
-
-**Track B: `feature/30-31-certifications`**
-- TDD: `POST/GET/PUT/DELETE /api/certifications` (AC-10-x)
-- Certification status computed: valid/expiring (30 days)/expired
-- Compliance page: all suppliers with cert summary and traffic lights
-- Supplier profile: certification CRUD section
-- Use `security-reviewer` agent before PR
-
-```bash
-git worktree add ../contracker-spend feature/28-29-spend
-git worktree add ../contracker-certifications feature/30-31-certifications
-```
-
-**Closes:** Issues #28, #29, #30, #31
+**Closed:** Issues #28, #29, #30, #31
 
 ---
 
@@ -270,7 +254,7 @@ git worktree add ../contracker-certifications feature/30-31-certifications
 |------|-------|------|--------|--------|
 | Apr 7–8 | Phase 1 | Infrastructure: CI/CD (8 stages) + agents + PR template | chore | ✅ Done (PR #55) |
 | Apr 8–9 | Phase 2 | Sprint 2: dashboard risk UI + notifications (parallel worktrees) | #19–#26 | ✅ Done (PRs #57, #58 merged) |
-| Apr 12–14 | Phase 3 | Sprint 3: spend + certifications (parallel worktrees) | #28–#31 | ❌ Not started |
+| Apr 9 | Phase 3 | Sprint 3: spend + certifications | #28–#31 | ✅ Done (PRs #60, #61 merged) |
 | Apr 15–16 | Phase 4 | Sprint 3: email alerts + team invitation | #27, #32 | ❌ Not started |
 | Apr 17–19 | Phase 5 | Documentation (README, blog, reflection, video) | — | ❌ Not started |
 | Apr 20–22 | Phase 6 | Final QA, security audit, showcase submission | #33 | ❌ Not started |
