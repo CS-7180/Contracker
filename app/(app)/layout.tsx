@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
+import { NotificationBell } from '@/components/shared/NotificationBell'
 
 const navItems = [
   { label: 'Dashboard',     href: '/dashboard',     icon: LayoutDashboard },
@@ -269,18 +270,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <button className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-white/[0.06] hover:text-foreground">
               <Search className="h-4 w-4" />
             </button>
-            <Link
-              href="/notifications"
-              className="relative rounded-lg p-2 text-muted-foreground transition-colors hover:bg-white/[0.06] hover:text-foreground"
-            >
-              <Bell className="h-4 w-4" />
-              <motion.span
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-                className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-indigo-400 animate-badge-pulse"
-              />
-            </Link>
+            <NotificationBell />
             <div className="ml-2 flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500/25 to-violet-500/25 ring-1 ring-white/[0.12]">
               <User className="h-3.5 w-3.5 text-muted-foreground" />
             </div>
