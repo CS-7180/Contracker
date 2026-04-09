@@ -55,9 +55,11 @@ function profileQb(role: 'admin' | 'member') {
 
 // ─── Shared mock data ─────────────────────────────────────────────────────────
 
+const SUPPLIER_UUID = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
+
 const mockCert = {
   id: 'cert-1',
-  supplier_id: 'sup-1',
+  supplier_id: SUPPLIER_UUID,
   cert_type: 'ISO',
   issued_date: '2024-01-01',
   expiry_date: addDays(90), // valid
@@ -142,7 +144,7 @@ describe('GET /api/certifications', () => {
     }
     mockCreateClient.mockReturnValue({ ...authClient('user-1'), from: vi.fn().mockReturnValue(qb) } as any)
 
-    const res = await GET(new Request('http://localhost/api/certifications?supplier_id=sup-1'))
+    const res = await GET(new Request(`http://localhost/api/certifications?supplier_id=${SUPPLIER_UUID}`))
     expect(res.status).toBe(200)
     const body = await res.json()
 
