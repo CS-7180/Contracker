@@ -38,8 +38,8 @@ export async function GET(req: Request) {
 
   const { supplier_id } = parsed.data
 
-  const { data: certs, error } = await supabase
-    .from('certifications')
+  // Cast needed: certifications table type not in generated types yet
+  const { data: certs, error } = await (supabase.from('certifications') as any)
     .select('*')
     .eq('supplier_id', supplier_id)
     .order('expiry_date', { ascending: true })
@@ -89,8 +89,8 @@ export async function POST(req: Request) {
     )
   }
 
-  const { data: cert, error } = await supabase
-    .from('certifications')
+  // Cast needed: certifications table not in generated types yet
+  const { data: cert, error } = await (supabase.from('certifications') as any)
     .insert({ ...parsed.data, created_by: user.id })
     .select()
     .single()

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { getCertificationStatus } from '@/lib/risk'
+import { requireAdmin } from '@/lib/auth'
 
 const UpdateCertSchema = z.object({
   cert_type: z.enum(['ISO', 'NDA', 'insurance', 'other']).optional(),
@@ -42,8 +43,8 @@ export async function PUT(
     )
   }
 
-  const { data: cert, error } = await supabase
-    .from('certifications')
+  // Cast needed: certifications table not in generated types yet
+  const { data: cert, error } = await (supabase.from('certifications') as any)
     .update({ ...parsed.data, updated_at: new Date().toISOString() })
     .eq('id', params.id)
     .select()
@@ -65,7 +66,7 @@ export async function PUT(
 }
 
 export async function DELETE(
-  req: Request,
+  _req: Request,
   { params }: { params: { id: string } }
 ) {
   const supabase = createClient()
@@ -78,21 +79,11 @@ export async function DELETE(
     )
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
+  const { error: roleError } = await requireAdmin(supabase, user.id)
+  if (roleError) return roleError
 
-  if (profile?.role !== 'admin') {
-    return NextResponse.json(
-      { data: null, error: { message: 'Forbidden', code: '403' } },
-      { status: 403 }
-    )
-  }
-
-  const { error } = await supabase
-    .from('certifications')
+  // Cast needed: certifications table not in generated types yet
+  const { error } = await (supabase.from('certifications') as any)
     .delete()
     .eq('id', params.id)
 
