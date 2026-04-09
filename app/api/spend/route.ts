@@ -40,6 +40,20 @@ export async function GET(req: Request) {
 
   const { period, start, end, category } = parsed.data
 
+  if (period === 'custom' && (!start || !end)) {
+    return NextResponse.json(
+      { data: null, error: { message: 'start and end are required for period=custom', code: '400' } },
+      { status: 400 }
+    )
+  }
+
+  if (period === 'custom' && start && end && start > end) {
+    return NextResponse.json(
+      { data: null, error: { message: 'start must be on or before end', code: '400' } },
+      { status: 400 }
+    )
+  }
+
   let query = (supabase.from('contracts') as any).select(
     'id, value, category, start_date, end_date, supplier_id, suppliers(name)'
   )
@@ -55,7 +69,7 @@ export async function GET(req: Request) {
 
   if (error) {
     return NextResponse.json(
-      { data: null, error: { message: error.message, code: '500' } },
+      { data: null, error: { message: 'Internal server error', code: '500' } },
       { status: 500 }
     )
   }

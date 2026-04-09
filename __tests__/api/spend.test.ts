@@ -275,15 +275,24 @@ describe('GET /api/spend — period=custom', () => {
     expect(qb.lte).toHaveBeenCalledWith('start_date', '2026-03-31')
   })
 
-  it('falls back to all when custom period is missing start/end params', async () => {
+  it('returns 400 when custom period is missing start/end params', async () => {
     const qb = makeQb({ data: [], error: null })
     mockCreateClient.mockReturnValue({ ...authClient('user-1'), from: vi.fn().mockReturnValue(qb) } as any)
 
-    await GET(new Request(`http://localhost/api/spend?period=custom`))
+    const res = await GET(new Request(`http://localhost/api/spend?period=custom`))
+    expect(res.status).toBe(400)
+    const body = await res.json()
+    expect(body.error.code).toBe('400')
+  })
 
-    // No gte/lte called — falls back to all
-    expect(qb.gte).not.toHaveBeenCalled()
-    expect(qb.lte).not.toHaveBeenCalled()
+  it('returns 400 when start is after end', async () => {
+    const qb = makeQb({ data: [], error: null })
+    mockCreateClient.mockReturnValue({ ...authClient('user-1'), from: vi.fn().mockReturnValue(qb) } as any)
+
+    const res = await GET(new Request(`http://localhost/api/spend?period=custom&start=2026-06-01&end=2026-01-01`))
+    expect(res.status).toBe(400)
+    const body = await res.json()
+    expect(body.error.code).toBe('400')
   })
 })
 
