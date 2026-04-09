@@ -27,9 +27,9 @@ All work is on `main`. Every new feature must branch off `main` as `feature/[iss
 |-----------|--------|
 | M2.0 Contract list (search, filter, sort, pagination) | ✅ Done (PR #48) |
 | M2.1 Basic dashboard + `lib/risk.ts` + `lib/alerts.ts` | ✅ Done (PRs #49, #50) |
-| M2.2 Traffic-light dashboard UI (issues #19, #20, #21) | ❌ Open |
-| M2.3 Notifications — alerts.ts, edge fn, API, UI (issues #22–#25) | ❌ Open |
-| M2.4 Sprint 2 integration QA (issue #26) | ❌ Open |
+| M2.2 Traffic-light dashboard UI (issues #19, #20, #21) | ✅ PR #57 open |
+| M2.3 Notifications — alerts.ts, edge fn, API, UI (issues #22–#25) | ✅ PR #58 open |
+| M2.4 Sprint 2 integration QA (issue #26) | ⏳ After #57 + #58 merge |
 
 ### Sprint 3 — Not Started
 All issues #27–#33 are open.
@@ -69,12 +69,12 @@ All issues #27–#33 are open.
 
 | Gap | Status |
 |-----|--------|
-| Dashboard: portfolio summary bar (green/amber/red counts) | ❌ |
-| Dashboard: contracts sorted red → amber → green | ❌ |
-| Dashboard: supplier risk roll-up indicator | ❌ |
-| Notifications: in-app bell with unread count | ❌ |
-| Notifications: `/api/notifications` GET + PUT (currently stubs returning 501) | ❌ |
-| Notifications: Supabase Edge Function cron inserting at 60/30/7 day thresholds | ❌ |
+| Dashboard: portfolio summary bar (green/amber/red counts) | ✅ PR #57 |
+| Dashboard: contracts sorted red → amber → green | ✅ PR #57 |
+| Dashboard: supplier risk roll-up indicator | ✅ PR #57 |
+| Notifications: in-app bell with unread count | ✅ PR #58 |
+| Notifications: `/api/notifications` GET + PUT (currently stubs returning 501) | ✅ PR #58 |
+| Notifications: Supabase Edge Function cron inserting at 60/30/7 day thresholds | ✅ PR #58 (`/api/cron/notifications`) |
 | Spend: `/api/spend` endpoint + page with Recharts bar chart | ❌ |
 | Compliance: certification CRUD API + compliance page with traffic lights | ❌ |
 | Team settings: member invitation flow (Admin only) | ❌ |
@@ -106,7 +106,7 @@ All issues #27–#33 are open.
 | PostToolUse quality-enforcement hook | ✅ | typecheck-on-edit runs `tsc --noEmit` on every edit |
 | MCP server integrated via `.mcp.json` | ✅ | playwright, supabase, magic (21st.dev) |
 | **Custom agents in `.claude/agents/`** | ❌ | Directory does not exist |
-| **Parallel worktree development** | ❌ | All development sequential — no `git worktree` in history |
+| **Parallel worktree development** | ✅ | Phase 2: two worktrees (`contracker-dashboard`, `contracker-notifications`) — see `session_logs/2026-04-08-phase2-parallel-worktrees.md` |
 | **Writer/Reviewer + C.L.E.A.R. on PRs** | ❌ | PR bodies do not contain C.L.E.A.R. sections |
 | **AI disclosure metadata in PRs** | ❌ | No "% AI-generated" field in PR descriptions |
 
