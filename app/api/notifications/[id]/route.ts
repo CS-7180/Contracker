@@ -28,8 +28,8 @@ export async function PUT(_req: Request, { params }: { params: { id: string } })
   }
 
   // Ownership already verified above — safe to update by id only
-  const { error: updateError } = await supabase
-    .from('notifications')
+  // Cast needed: Supabase strict generics don't resolve Update types correctly.
+  const { error: updateError } = await (supabase.from('notifications') as any)
     .update({ is_read: true })
     .eq('id', params.id)
 
