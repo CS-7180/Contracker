@@ -87,6 +87,17 @@ const expiredContract = {
   value: 200,
 }
 
+// Amber: renewal_date 50 days out, notice_period 30 days
+// → diffInDays(50) > 30 but <= 60 → amber
+const amberContract = {
+  id: 'c-amber',
+  name: 'Amber Contract',
+  end_date: addDays(180),
+  renewal_date: addDays(50),
+  notice_period_days: 30,
+  value: 750,
+}
+
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe('GET /api/dashboard', () => {
@@ -165,5 +176,42 @@ describe('GET /api/dashboard', () => {
     expect(body.data).toHaveProperty('expired_count')
     expect(body.data).toHaveProperty('total_value')
     expect(body.data).toHaveProperty('expiring_soon')
+  })
+
+  // ── Risk colour counts (AC-06-1, AC-06-2, AC-06-3) ────────────────────────
+
+  it('response includes green_count, amber_count, red_count fields', async () => {
+    mockCreateClient.mockReturnValue(makeClient('user-1', []) as any)
+    const res = await GET(new Request('http://localhost/api/dashboard'))
+    const body = await res.json()
+    expect(body.data).toHaveProperty('green_count')
+    expect(body.data).toHaveProperty('amber_count')
+    expect(body.data).toHaveProperty('red_count')
+  })
+
+  it('counts green/amber/red contracts correctly across all contracts (AC-06-1–3)', async () => {
+    // green: activeContract renewal 180 days (>60) → green
+    // amber: amberContract renewal 50 days (>30, ≤60) → amber
+    // red:   expiringContract renewal 20 days (≤30) → red
+    mockCreateClient.mockReturnValue(
+      makeClient('user-1', [activeContract, amberContract, expiringContract]) as any
+    )
+    const res = await GET(new Request('http://localhost/api/dashboard'))
+    const body = await res.json()
+    expect(body.data.green_count).toBe(1)
+    expect(body.data.amber_count).toBe(1)
+    expect(body.data.red_count).toBe(1)
+  })
+
+  it('expired contracts count as red in risk colour summary', async () => {
+    // expiredContract renewal -30 days → diffInDays <= notice_period → red
+    mockCreateClient.mockReturnValue(
+      makeClient('user-1', [expiredContract]) as any
+    )
+    const res = await GET(new Request('http://localhost/api/dashboard'))
+    const body = await res.json()
+    expect(body.data.red_count).toBe(1)
+    expect(body.data.green_count).toBe(0)
+    expect(body.data.amber_count).toBe(0)
   })
 })
