@@ -14,7 +14,7 @@ export async function GET(_req: Request) {
 
   const { data: notifications, error } = await supabase
     .from('notifications')
-    .select('*')
+    .select('*, contracts(name, renewal_date, suppliers(name))')
     .eq('user_id', user.id)
     .eq('is_read', false)
     .order('created_at', { ascending: false })
