@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/server'
 import { getCertificationStatus } from '@/lib/risk'
 import { requireAdmin } from '@/lib/auth'
 
+const UUIDParam = z.string().uuid()
+
 const UpdateCertSchema = z.object({
   cert_type: z.enum(['ISO', 'NDA', 'insurance', 'other']).optional(),
   issued_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
@@ -25,6 +27,14 @@ export async function PUT(
     )
   }
 
+  // Validate path param is a UUID (A03 defense-in-depth)
+  if (!UUIDParam.safeParse(params.id).success) {
+    return NextResponse.json(
+      { data: null, error: { message: 'Invalid id', code: '400' } },
+      { status: 400 }
+    )
+  }
+
   let body: unknown
   try {
     body = await req.json()
@@ -43,7 +53,19 @@ export async function PUT(
     )
   }
 
-  // Cast needed: certifications table not in generated types yet
+  // Fetch-first: confirm cert exists before updating (A01 — prevents existence leakage)
+  const { data: existing, error: fetchError } = await (supabase.from('certifications') as any)
+    .select('id')
+    .eq('id', params.id)
+    .single()
+
+  if (fetchError || !existing) {
+    return NextResponse.json(
+      { data: null, error: { message: 'Certification not found', code: '404' } },
+      { status: 404 }
+    )
+  }
+
   const { data: cert, error } = await (supabase.from('certifications') as any)
     .update({ ...parsed.data, updated_at: new Date().toISOString() })
     .eq('id', params.id)
@@ -52,7 +74,7 @@ export async function PUT(
 
   if (error) {
     return NextResponse.json(
-      { data: null, error: { message: error.message, code: '500' } },
+      { data: null, error: { message: 'Internal server error', code: '500' } },
       { status: 500 }
     )
   }
@@ -79,17 +101,24 @@ export async function DELETE(
     )
   }
 
+  // Validate path param is a UUID (A03 defense-in-depth)
+  if (!UUIDParam.safeParse(params.id).success) {
+    return NextResponse.json(
+      { data: null, error: { message: 'Invalid id', code: '400' } },
+      { status: 400 }
+    )
+  }
+
   const { error: roleError } = await requireAdmin(supabase, user.id)
   if (roleError) return roleError
 
-  // Cast needed: certifications table not in generated types yet
   const { error } = await (supabase.from('certifications') as any)
     .delete()
     .eq('id', params.id)
 
   if (error) {
     return NextResponse.json(
-      { data: null, error: { message: error.message, code: '500' } },
+      { data: null, error: { message: 'Internal server error', code: '500' } },
       { status: 500 }
     )
   }

@@ -46,7 +46,7 @@ export async function GET(req: Request) {
 
   if (error) {
     return NextResponse.json(
-      { data: null, error: { message: error.message, code: '500' } },
+      { data: null, error: { message: 'Internal server error', code: '500' } },
       { status: 500 }
     )
   }
@@ -97,7 +97,7 @@ export async function POST(req: Request) {
 
   if (error) {
     return NextResponse.json(
-      { data: null, error: { message: error.message, code: '500' } },
+      { data: null, error: { message: 'Internal server error', code: '500' } },
       { status: 500 }
     )
   }

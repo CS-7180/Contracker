@@ -56,9 +56,10 @@ function profileQb(role: 'admin' | 'member') {
 // ─── Shared mock data ─────────────────────────────────────────────────────────
 
 const SUPPLIER_UUID = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
+const CERT_UUID = 'b2c3d4e5-f6a7-8901-bcde-f12345678901'
 
 const mockCert = {
-  id: 'cert-1',
+  id: CERT_UUID,
   supplier_id: SUPPLIER_UUID,
   cert_type: 'ISO',
   issued_date: '2024-01-01',
@@ -151,7 +152,7 @@ describe('GET /api/certifications', () => {
     expect(body.error).toBeNull()
     const certs = body.data
 
-    const valid = certs.find((c: any) => c.id === 'cert-1')
+    const valid = certs.find((c: any) => c.id === CERT_UUID)
     const expired = certs.find((c: any) => c.id === 'cert-expired')
     const expiring = certs.find((c: any) => c.id === 'cert-expiring')
 
@@ -284,36 +285,46 @@ describe('PUT /api/certifications/[id]', () => {
     }
     mockCreateClient.mockReturnValue({ ...authClient(null), from: vi.fn().mockReturnValue(qb) } as any)
 
-    const req = new Request('http://localhost/api/certifications/cert-1', {
+    const req = new Request(`http://localhost/api/certifications/${CERT_UUID}`, {
       method: 'PUT',
       body: JSON.stringify({ expiry_date: addDays(400) }),
       headers: { 'Content-Type': 'application/json' },
     })
-    const res = await PUT(req, { params: { id: 'cert-1' } })
+    const res = await PUT(req, { params: { id: CERT_UUID } })
     expect(res.status).toBe(401)
   })
 
   it('updates certification and returns 200 with computed status', async () => {
     const updatedCert = { ...mockCert, expiry_date: addDays(400) }
 
-    let callCount = 0
+    // fetchQb: select('id').eq().single() — fetch-first existence check
+    const fetchQb = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({ data: { id: CERT_UUID }, error: null }),
+    }
+    // updateQb: update().eq().select().single()
     const updateQb: any = {
       update: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
       select: vi.fn().mockReturnThis(),
       single: vi.fn().mockResolvedValue({ data: updatedCert, error: null }),
     }
+    let callCount = 0
     mockCreateClient.mockReturnValue({
       ...authClient('user-1'),
-      from: vi.fn().mockReturnValue(updateQb),
+      from: vi.fn().mockImplementation(() => {
+        callCount++
+        return callCount === 1 ? fetchQb : updateQb
+      }),
     } as any)
 
-    const req = new Request('http://localhost/api/certifications/cert-1', {
+    const req = new Request(`http://localhost/api/certifications/${CERT_UUID}`, {
       method: 'PUT',
       body: JSON.stringify({ expiry_date: addDays(400) }),
       headers: { 'Content-Type': 'application/json' },
     })
-    const res = await PUT(req, { params: { id: 'cert-1' } })
+    const res = await PUT(req, { params: { id: CERT_UUID } })
     expect(res.status).toBe(200)
     const body = await res.json()
     expect(body.data.status).toBe('valid')
@@ -329,12 +340,12 @@ describe('PUT /api/certifications/[id]', () => {
     }
     mockCreateClient.mockReturnValue({ ...authClient('user-1'), from: vi.fn().mockReturnValue(qb) } as any)
 
-    const req = new Request('http://localhost/api/certifications/cert-1', {
+    const req = new Request(`http://localhost/api/certifications/${CERT_UUID}`, {
       method: 'PUT',
       body: JSON.stringify({ cert_type: 'INVALID_TYPE' }),
       headers: { 'Content-Type': 'application/json' },
     })
-    const res = await PUT(req, { params: { id: 'cert-1' } })
+    const res = await PUT(req, { params: { id: CERT_UUID } })
     expect(res.status).toBe(400)
   })
 })
@@ -372,8 +383,8 @@ describe('DELETE /api/certifications/[id] — role checks', () => {
       }),
     } as any)
 
-    const req = new Request('http://localhost/api/certifications/cert-1', { method: 'DELETE' })
-    const res = await DELETE(req, { params: { id: 'cert-1' } })
+    const req = new Request(`http://localhost/api/certifications/${CERT_UUID}`, { method: 'DELETE' })
+    const res = await DELETE(req, { params: { id: CERT_UUID } })
     expect(res.status).toBe(403)
     const body = await res.json()
     expect(body.error.code).toBe('403')
@@ -394,8 +405,8 @@ describe('DELETE /api/certifications/[id] — role checks', () => {
       }),
     } as any)
 
-    const req = new Request('http://localhost/api/certifications/cert-1', { method: 'DELETE' })
-    const res = await DELETE(req, { params: { id: 'cert-1' } })
+    const req = new Request(`http://localhost/api/certifications/${CERT_UUID}`, { method: 'DELETE' })
+    const res = await DELETE(req, { params: { id: CERT_UUID } })
     expect(res.status).toBe(200)
     const body = await res.json()
     expect(body.data).toBeNull()
