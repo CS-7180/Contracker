@@ -143,20 +143,16 @@ describe('PUT /api/notifications/[id]', () => {
   })
 
   it('marks notification as read and returns 200 (AC-07-4)', async () => {
-    // First call (fetch to verify ownership): returns the notification
-    // Second call (update): resolves with no error
+    // First from() call: select to verify ownership
     const selectQb = {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
       single: vi.fn().mockResolvedValue({ data: mockNotification, error: null }),
     }
-    const updateQb = {
-      update: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      // second eq chains into a final eq that resolves
-    }
-    // Make update chain resolve
-    updateQb.eq.mockResolvedValueOnce({ error: null })
+    // Second from() call: update — single .eq() resolves with no error
+    const updateQb: any = { update: vi.fn(), eq: vi.fn() }
+    updateQb.update.mockReturnValue(updateQb)
+    updateQb.eq.mockResolvedValue({ error: null })
 
     let callCount = 0
     mockCreateClient.mockReturnValue({
