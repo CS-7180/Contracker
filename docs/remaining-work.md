@@ -1,6 +1,6 @@
 # Remaining Work — Analysis & Plan
 
-**Date:** 2026-04-09
+**Date:** 2026-04-09 (updated Phase 2 wrap-up)
 **Due:** 2026-04-22 (13 days remaining)
 **Owner:** Vineela Goli (Sprint 3)
 
@@ -25,30 +25,21 @@
 - **Custom agents** added to `.claude/agents/`: `security-reviewer.md`, `test-writer.md`
 - **C.L.E.A.R. PR template** live at `.github/PULL_REQUEST_TEMPLATE.md` (includes C.L.E.A.R. sections + AI disclosure fields)
 
-### Sprint 2 — Complete (pending PR merges)
+### Sprint 2 — Complete ✅ (Phase 2 wrapped up 2026-04-09)
 | Milestone | Status |
 |-----------|--------|
 | M2.0 Contract list (search, filter, sort, pagination) | ✅ Merged (PR #48) |
 | M2.1 Basic dashboard + `lib/risk.ts` + `lib/alerts.ts` | ✅ Merged (PRs #49, #50) |
-| M2.2 Traffic-light dashboard UI (issues #19, #20, #21) | ✅ PR #57 open — CI running |
-| M2.3 Notifications — API, cron, UI, live bell (issues #22–#25) | ✅ PR #58 open — CI running |
-| M2.4 Sprint 2 integration QA (issue #26) | ⏳ After #57 + #58 merge to main |
+| M2.2 Traffic-light dashboard UI (issues #19, #20, #21) | ✅ Merged (PR #57) |
+| M2.3 Notifications — API, cron, UI, live bell (issues #22–#25) | ✅ Merged (PR #58) |
+| M2.4 Sprint 2 integration QA (issue #26) | ⏳ Open — QA checklist in progress |
 
 ---
 
 ## Open GitHub Issues
 
-### Sprint 2 (PRs open, awaiting merge)
-| # | Title | PR |
-|---|-------|----|
-| 19 | [M2.2] Extend dashboard with traffic-light risk badges per contract | #57 |
-| 20 | [M2.2] Portfolio summary bar and red→amber→green sort order | #57 |
-| 21 | [M2.2] Implement supplier risk roll-up | #57 |
-| 22 | [M2.3] Implement lib/alerts.ts — shouldSendAlert() logic | #58 |
-| 23 | [M2.3] Build Supabase Edge Function cron for daily notification inserts | #58 |
-| 24 | [M2.3] Implement GET /api/notifications and PUT /api/notifications/[id] | #58 |
-| 25 | [M2.3] Build notification bell nav component and notifications page | #58 |
-| 26 | [M2.4] Sprint 2 integration QA | — |
+### Sprint 2 (all closed ✅)
+Issues #19–#25 closed on merge of PRs #57 and #58. Issue #26 open for QA sign-off.
 
 ### Sprint 3 (not started)
 | # | Title | Labels |
@@ -185,12 +176,13 @@ Security gates:
 
 ---
 
-### Phase 2 — Sprint 2 Completion ✅ IN PROGRESS (Apr 8–9)
+### Phase 2 — Sprint 2 Completion ✅ DONE (Apr 9)
 
-PRs #57 and #58 are open. Once CI passes and both merge:
-- Close issues #19–#25
-- Open issue #26 (Sprint 2 QA) as a single checklist PR on `main` confirming end-to-end happy path
-- Remove worktrees: `git worktree remove ../contracker-dashboard && git worktree remove ../contracker-notifications`
+- PR #57 (dashboard risk UI) merged — all CI checks green
+- PR #58 (notifications) merged — all CI checks green
+- Issues #19–#25 closed
+- Issue #26 (Sprint 2 QA) open — checklist pending manual smoke test
+- Worktrees pruned from git tracking (disk dirs remain due to Windows permissions)
 
 ---
 
@@ -277,7 +269,7 @@ git worktree add ../contracker-certifications feature/30-31-certifications
 | Date | Phase | What | Issues | Status |
 |------|-------|------|--------|--------|
 | Apr 7–8 | Phase 1 | Infrastructure: CI/CD (8 stages) + agents + PR template | chore | ✅ Done (PR #55) |
-| Apr 8–9 | Phase 2 | Sprint 2: dashboard risk UI + notifications (parallel worktrees) | #19–#26 | ✅ PRs #57, #58 open |
+| Apr 8–9 | Phase 2 | Sprint 2: dashboard risk UI + notifications (parallel worktrees) | #19–#26 | ✅ Done (PRs #57, #58 merged) |
 | Apr 12–14 | Phase 3 | Sprint 3: spend + certifications (parallel worktrees) | #28–#31 | ❌ Not started |
 | Apr 15–16 | Phase 4 | Sprint 3: email alerts + team invitation | #27, #32 | ❌ Not started |
 | Apr 17–19 | Phase 5 | Documentation (README, blog, reflection, video) | — | ❌ Not started |
