@@ -4,9 +4,9 @@ Contract & Supplier Management Platform built with Next.js 14, Supabase, and dep
 
 [![CI](https://github.com/CS-7180/Contracker/actions/workflows/ci.yml/badge.svg)](https://github.com/CS-7180/Contracker/actions/workflows/ci.yml)
 [![Deploy](https://github.com/CS-7180/Contracker/actions/workflows/deploy.yml/badge.svg)](https://github.com/CS-7180/Contracker/actions/workflows/deploy.yml)
-[![Production](https://img.shields.io/badge/production-live-brightgreen)](https://contracker.vercel.app)
+[![Production](https://img.shields.io/badge/production-live-brightgreen)](https://contracker-zeta.vercel.app/)
 
-> **Live app:** [https://contracker.vercel.app](https://contracker.vercel.app)
+> **Live app:** [https://contracker-zeta.vercel.app](https://contracker-zeta.vercel.app)
 
 ---
 
