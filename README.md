@@ -14,23 +14,23 @@ Contract & Supplier Management Platform built with Next.js 14, Supabase, and dep
 
 ```mermaid
 graph TD
-    Browser["Browser\n(Next.js React App)"]
+    Browser[Browser]
 
-    Browser -->|"HTTPS / App Router"| NextJS["Next.js 14 Server Layer\n(API Routes + Middleware)"]
+    Browser -->|HTTPS| NextJS[Next.js 14 - App Router + API Routes]
 
-    NextJS -->|"Auth session"| SupabaseAuth["Supabase Auth\n(email/password + invite flow)"]
-    NextJS -->|"Parameterised queries"| SupabaseDB["Supabase PostgreSQL\n(contracts, suppliers, certifications,\nnotifications, profiles)"]
-    NextJS -->|"Signed URLs (15-min)"| SupabaseStorage["Supabase Storage\n(PDF contracts — private bucket)"]
-    NextJS -->|"Transactional email"| Resend["Resend\n(renewal alert emails)"]
-    NextJS -->|"Error capture"| Sentry["Sentry\n(server + client errors)"]
+    NextJS -->|Auth session| SupabaseAuth[Supabase Auth]
+    NextJS -->|Parameterised queries| SupabaseDB[Supabase PostgreSQL]
+    NextJS -->|Signed URLs| SupabaseStorage[Supabase Storage - PDFs]
+    NextJS -->|Transactional email| Resend[Resend]
+    NextJS -->|Error capture| Sentry[Sentry]
+    NextJS -.->|Deployed to| Vercel[Vercel]
 
-    Cron["Cron: GET /api/cron/notifications\n(daily — fires at 7/30/60-day thresholds)"]
-    Cron -->|"INSERT notifications\n(deduplicated by unique index)"| SupabaseDB
-    Cron -->|"Send alert email"| Resend
+    Cron[Cron - /api/cron/notifications]
+    Cron -->|Insert notifications| SupabaseDB
+    Cron -->|Send alert email| Resend
 
-    CI["GitHub Actions CI\n(lint → typecheck → test → build\n→ E2E → security → AI-review → Lighthouse)"]
-    CI -->|"Preview deploy"| Vercel["Vercel\n(preview per PR, production on merge)"]
-    NextJS -.->|"deployed to"| Vercel
+    CI[GitHub Actions CI - 8 stages]
+    CI -->|Preview and production deploy| Vercel
 ```
 
 ---
