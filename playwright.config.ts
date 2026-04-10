@@ -98,6 +98,17 @@ export default defineConfig({
       },
       dependencies: ['setup'],
     },
+
+    // Team settings page tests (authenticated + unauthenticated redirect)
+    {
+      name: 'team-pages',
+      testMatch: /team\.spec\.ts/,
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: 'e2e/.auth/user.json',
+      },
+      dependencies: ['setup'],
+    },
   ],
 
   // Automatically start the Next.js dev server
