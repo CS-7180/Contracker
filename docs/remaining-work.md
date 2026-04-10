@@ -1,7 +1,7 @@
 # Remaining Work — Analysis & Plan
 
-**Date:** 2026-04-09 (updated Phase 4 complete)
-**Due:** 2026-04-22 (13 days remaining)
+**Date:** 2026-04-10 (updated Phase 4 merged)
+**Due:** 2026-04-22 (12 days remaining)
 **Owner:** Vineela Goli (Sprint 3)
 
 ---
@@ -12,7 +12,7 @@
 
 Phase 3 branches merged: `feature/28-29-spend` (PR #60) and `feature/30-31-certifications` (PR #61) both merged 2026-04-09.
 
-Phase 4 PRs open: `feature/27-email-renewal-alerts` (PR #63) and `feature/32-team-settings-invite` (PR #64) — both awaiting CI + merge.
+Phase 4 branches merged: `feature/27-email-renewal-alerts` (PR #63) and `feature/32-team-settings-invite` (PR #64) both merged 2026-04-10 — all 8 CI stages green, 211 tests passing.
 
 ---
 
@@ -48,12 +48,12 @@ Issues #19–#25 closed on merge of PRs #57 and #58. Issue #26 open for QA sign-
 ### Sprint 3
 | # | Title | Status |
 |---|-------|--------|
-| 27 | [M3.0] Configure Resend and implement email renewal alerts | ⏳ PR #63 open |
+| 27 | [M3.0] Configure Resend and implement email renewal alerts | ✅ Closed (PR #63 merged) |
 | 28 | [M3.1] Implement GET /api/spend endpoint | ✅ Closed (PR #60 merged) |
 | 29 | [M3.1] Build spend tracking page with Recharts bar chart | ✅ Closed (PR #60 merged) |
 | 30 | [M3.2] Implement certification CRUD with computed status | ✅ Closed (PR #61 merged) |
 | 31 | [M3.2] Build compliance page with supplier certification traffic lights | ✅ Closed (PR #61 merged) |
-| 32 | [M3.3] Build team settings page and member invitation flow | ⏳ PR #64 open |
+| 32 | [M3.3] Build team settings page and member invitation flow | ✅ Closed (PR #64 merged) |
 | 33 | [M3.4] Final QA, OWASP security audit, Lighthouse CI gate, and production deploy | ❌ Open |
 
 ---
@@ -72,11 +72,9 @@ Issues #19–#25 closed on merge of PRs #57 and #58. Issue #26 open for QA sign-
 | Notifications: cron inserts at 60/30/7 day thresholds | ✅ PR #58 (`/api/cron/notifications`) |
 | Spend: `/api/spend` endpoint + page with Recharts bar chart | ✅ Merged (PR #60) |
 | Compliance: certification CRUD API + compliance page with traffic lights | ✅ Merged (PR #61) |
-| Team settings: member invitation flow (Admin only) | ⏳ PR #64 open |
+| Team settings: member invitation flow (Admin only) | ✅ Merged (PR #64) |
 
-**Remaining page stubs on `main`:** None — all resolved (stubs were replaced in PRs #60, #61, #64)
-
-*(Team stubs resolved in PR #64 — pending CI + merge)*
+**Remaining page stubs on `main`:** None — all resolved.
 
 ---
 
@@ -197,22 +195,22 @@ Security gates:
 
 ---
 
-### Phase 4 — Sprint 3: Email Alerts + Team Invitation ⏳ PRs OPEN
+### Phase 4 — Sprint 3: Email Alerts + Team Invitation ✅ DONE (Apr 10)
 
-**`feature/27-email-renewal-alerts`** → PR #63
+**`feature/27-email-renewal-alerts`** → PR #63 merged 2026-04-10
 - Augmented cron route to send Resend email after each successful `idx_notifications_unique` insert
 - Email deduplication via DB unique index (no code guards needed)
 - `escapeHtml()` / `sanitizeEmailHeader()` security helpers added
 - 8 new unit tests: AC-08-1, AC-08-2, AC-08-3
 
-**`feature/32-team-settings-invite`** → PR #64
+**`feature/32-team-settings-invite`** → PR #64 merged 2026-04-10
 - Full team settings UI at `/settings/team` (Admin only — 403 for Member)
 - `GET /api/team`, `POST /api/team/invite`, `PUT /api/team/[id]`, `DELETE /api/team/[id]`
 - 18 unit tests (AC-11-1, AC-11-3), E2E spec, playwright `team-pages` project registered
 - `params.id` UUID validation (security-reviewer A03 finding)
 - 211 tests passing
 
-**Closes:** Issues #27, #32 (on merge)
+**Closed:** Issues #27, #32
 
 ---
 
@@ -255,6 +253,6 @@ Security gates:
 | Apr 7–8 | Phase 1 | Infrastructure: CI/CD (8 stages) + agents + PR template | chore | ✅ Done (PR #55) |
 | Apr 8–9 | Phase 2 | Sprint 2: dashboard risk UI + notifications (parallel worktrees) | #19–#26 | ✅ Done (PRs #57, #58 merged) |
 | Apr 9 | Phase 3 | Sprint 3: spend + certifications | #28–#31 | ✅ Done (PRs #60, #61 merged) |
-| Apr 9 | Phase 4 | Sprint 3: email alerts + team invitation | #27, #32 | ⏳ PRs #63, #64 open |
-| Apr 17–19 | Phase 5 | Documentation (README, blog, reflection, video) | — | ❌ Not started |
-| Apr 20–22 | Phase 6 | Final QA, security audit, showcase submission | #33 | ❌ Not started |
+| Apr 10 | Phase 4 | Sprint 3: email alerts + team invitation | #27, #32 | ✅ Done (PRs #63, #64 merged) |
+| Apr 10–17 | Phase 5 | Documentation (README diagram + badges) | — | ⏳ In progress |
+| Apr 17–22 | Phase 6 | Final QA, security audit, showcase submission | #26, #33 | ❌ Not started |
