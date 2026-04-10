@@ -3,8 +3,6 @@ import { Resend } from 'resend'
 import { createClient } from '@/lib/supabase/server'
 import { shouldSendAlert, ALERT_THRESHOLDS } from '@/lib/alerts'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 // Escape user-supplied content before embedding in HTML email bodies (A03 Injection)
 function escapeHtml(str: string): string {
   return str
@@ -32,6 +30,9 @@ export async function GET(req: Request) {
   }
 
   const supabase = createClient()
+  // Lazy-init Resend inside handler so module-level evaluation during `next build`
+  // doesn't throw when RESEND_API_KEY is absent in the CI build environment.
+  const resend = new Resend(process.env.RESEND_API_KEY)
 
   // Fetch contracts — bounded at 2000 rows to avoid OOM on serverless (A04)
   const { data: contracts, error: contractsError } = await (supabase.from('contracts') as any)
