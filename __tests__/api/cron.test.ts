@@ -13,7 +13,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // ─── Mocks (hoisted before imports by Vitest) ─────────────────────────────────
 
-const mockSend = vi.fn().mockResolvedValue({ data: { id: 'email-id' }, error: null })
+// vi.hoisted() runs before vi.mock factories AND before imports — safe to close over
+const { mockSend } = vi.hoisted(() => {
+  const mockSend = vi.fn().mockResolvedValue({ data: { id: 'email-id' }, error: null })
+  return { mockSend }
+})
 
 vi.mock('resend', () => ({
   Resend: vi.fn().mockImplementation(() => ({

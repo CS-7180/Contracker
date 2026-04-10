@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
+import { Resend } from 'resend'
 import { createClient } from '@/lib/supabase/server'
 import { shouldSendAlert, ALERT_THRESHOLDS } from '@/lib/alerts'
+
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function GET(req: Request) {
   // Secure with CRON_SECRET to prevent unauthorized triggering
@@ -15,9 +18,9 @@ export async function GET(req: Request) {
 
   const supabase = createClient()
 
-  // Fetch all contracts with future renewal dates + owner info
+  // Fetch all contracts with name (for email subject) + owner info
   const { data: contracts, error: contractsError } = await (supabase.from('contracts') as any)
-    .select('id, renewal_date, notice_period_days, created_by')
+    .select('id, name, renewal_date, notice_period_days, created_by')
 
   if (contractsError) {
     return NextResponse.json(
@@ -50,7 +53,29 @@ export async function GET(req: Request) {
         )
       }
 
-      if (!insertError) inserted++
+      if (!insertError) {
+        inserted++
+
+        // Send email alert — fetch owner email fresh on each run (satisfies AC-08-3)
+        try {
+          const { data: profile } = await (supabase.from('profiles') as any)
+            .select('email')
+            .eq('id', contract.created_by)
+            .single() as { data: { email: string } | null; error: unknown }
+
+          if (profile?.email) {
+            await resend.emails.send({
+              from: 'onboarding@resend.dev',
+              to: profile.email,
+              subject: `Renewal alert: ${contract.name} renews in ${threshold} days`,
+              html: `<p>Your contract <strong>${contract.name}</strong> is due for renewal in <strong>${threshold} days</strong>. Please take the necessary action to avoid auto-renewal on unfavorable terms.</p><p><a href="${process.env.NEXT_PUBLIC_APP_URL ?? 'https://contracker.vercel.app'}/contracts">View contracts</a></p>`,
+            })
+          }
+        } catch (emailError) {
+          // Email failure must not crash the cron — in-app notification was already created
+          console.error(`Failed to send renewal email for contract ${contract.id}:`, emailError)
+        }
+      }
     }
   }
 
