@@ -2,6 +2,39 @@
 
 Contract & Supplier Management Platform built with Next.js 14, Supabase, and deployed on Vercel.
 
+[![CI](https://github.com/CS-7180/Contracker/actions/workflows/ci.yml/badge.svg)](https://github.com/CS-7180/Contracker/actions/workflows/ci.yml)
+[![Deploy](https://github.com/CS-7180/Contracker/actions/workflows/deploy.yml/badge.svg)](https://github.com/CS-7180/Contracker/actions/workflows/deploy.yml)
+[![Production](https://img.shields.io/badge/production-live-brightgreen)](https://contracker-zeta.vercel.app/)
+
+> **Live app:** [https://contracker-zeta.vercel.app](https://contracker-zeta.vercel.app)
+
+---
+
+## Architecture
+
+```mermaid
+graph TD
+    Browser[Browser]
+
+    Browser -->|HTTPS| NextJS[Next.js 14 - App Router + API Routes]
+
+    NextJS -->|Auth session| SupabaseAuth[Supabase Auth]
+    NextJS -->|Parameterised queries| SupabaseDB[Supabase PostgreSQL]
+    NextJS -->|Signed URLs| SupabaseStorage[Supabase Storage - PDFs]
+    NextJS -->|Transactional email| Resend[Resend]
+    NextJS -->|Error capture| Sentry[Sentry]
+    NextJS -.->|Deployed to| Vercel[Vercel]
+
+    Cron[Cron - /api/cron/notifications]
+    Cron -->|Insert notifications| SupabaseDB
+    Cron -->|Send alert email| Resend
+
+    CI[GitHub Actions CI - 8 stages]
+    CI -->|Preview and production deploy| Vercel
+```
+
+---
+
 ## Getting Started
 
 ### 1. Install dependencies
@@ -26,6 +59,8 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+---
+
 ## Development Commands
 
 | Command | Description |
@@ -34,9 +69,9 @@ Open [http://localhost:3000](http://localhost:3000).
 | `npm run build` | Build for production |
 | `npm run type-check` | TypeScript type check |
 | `npm run lint` | ESLint |
-| `npm test` | Run unit + integration tests |
+| `npm test` | Run unit + integration tests (211 tests) |
 | `npm run test:watch` | Tests in watch mode |
-| `npm run test:e2e` | Playwright E2E tests |
+| `npm run test:e2e` | Playwright E2E tests (7 specs) |
 
 ## Running Tests
 
@@ -48,34 +83,62 @@ cp .env.local.example .env.test
 npm test
 ```
 
+---
+
 ## Project Structure
 
 ```
-app/          → Next.js App Router pages and API routes
-components/   → React components (shadcn/ui + custom)
-lib/          → Pure functions and Supabase clients
-types/        → TypeScript types from database schema
-supabase/     → SQL migrations and seed data
-__tests__/    → Vitest unit + integration tests
-e2e/          → Playwright end-to-end tests
-docs/         → PRD, schema, API design, sprint plan
+app/
+├── (auth)/login, signup       → Auth pages
+├── (app)/                     → Protected app pages
+│   ├── dashboard/             → Traffic-light risk dashboard
+│   ├── contracts/             → Contract CRUD + PDF upload
+│   ├── suppliers/             → Supplier CRUD
+│   ├── compliance/            → Certification tracking
+│   ├── spend/                 → Spend analytics (Recharts)
+│   ├── notifications/         → In-app renewal alerts
+│   └── settings/team/         → Team management (Admin only)
+├── api/                       → Next.js API routes
+│   ├── contracts/, suppliers/
+│   ├── certifications/, notifications/
+│   ├── dashboard/, spend/, team/
+│   └── cron/notifications/    → Daily alert cron
+components/                    → shadcn/ui + custom components
+lib/
+├── risk.ts                    → getContractStatus(), getRiskColour() — primary TDD targets
+├── alerts.ts                  → shouldSendAlert() — alert threshold logic
+supabase/migrations/           → SQL schema + seed data
+__tests__/                     → Vitest unit + integration tests (211)
+e2e/                           → Playwright E2E specs (7)
+session_logs/                  → Development session logs
+docs/                          → PRD, schema, API design, sprint plan
 ```
+
+---
 
 ## Tech Stack
 
-- **Framework:** Next.js 14 (App Router)
-- **Database:** Supabase (PostgreSQL + Auth + Storage)
-- **Styling:** Tailwind CSS v3 + shadcn/ui
-- **Animation:** Framer Motion
-- **Charts:** Recharts
-- **Email:** Resend
-- **Testing:** Vitest + Playwright
-- **CI/CD:** GitHub Actions + Vercel
+| Layer | Technology |
+|-------|-----------|
+| Framework | Next.js 14 (App Router) + React 18 |
+| Database | Supabase (PostgreSQL + RLS + Auth + Storage) |
+| Styling | Tailwind CSS v3 + shadcn/ui (Radix UI) |
+| Animation | Framer Motion |
+| Charts | Recharts |
+| Email | Resend |
+| Testing | Vitest + React Testing Library + Playwright |
+| CI/CD | GitHub Actions (8 stages) + Vercel |
+| Error Tracking | Sentry |
+| Uptime | Better Uptime |
+
+---
 
 ## Docs
 
-- [Product Requirements](docs/Contracker_PRD.md)
+- [Product Requirements](docs/PRD.md)
 - [Database Schema](docs/database-schema.md)
 - [API Design](docs/api-design.md)
+- [Architecture](docs/architecture.md)
 - [Acceptance Criteria](docs/acceptance-criteria.md)
 - [Sprint Plan](docs/sprint-plan.md)
+- [Security](docs/security.md)
