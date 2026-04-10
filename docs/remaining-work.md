@@ -1,6 +1,6 @@
 # Remaining Work — Analysis & Plan
 
-**Date:** 2026-04-09 (updated Phase 3 complete)
+**Date:** 2026-04-09 (updated Phase 4 complete)
 **Due:** 2026-04-22 (13 days remaining)
 **Owner:** Vineela Goli (Sprint 3)
 
@@ -11,6 +11,8 @@
 `main` is the integration branch. All new work branches off `main` as `feature/[issue-number]-short-description`.
 
 Phase 3 branches merged: `feature/28-29-spend` (PR #60) and `feature/30-31-certifications` (PR #61) both merged 2026-04-09.
+
+Phase 4 PRs open: `feature/27-email-renewal-alerts` (PR #63) and `feature/32-team-settings-invite` (PR #64) — both awaiting CI + merge.
 
 ---
 
@@ -46,12 +48,12 @@ Issues #19–#25 closed on merge of PRs #57 and #58. Issue #26 open for QA sign-
 ### Sprint 3
 | # | Title | Status |
 |---|-------|--------|
-| 27 | [M3.0] Configure Resend and implement email renewal alerts | ❌ Open |
+| 27 | [M3.0] Configure Resend and implement email renewal alerts | ⏳ PR #63 open |
 | 28 | [M3.1] Implement GET /api/spend endpoint | ✅ Closed (PR #60 merged) |
 | 29 | [M3.1] Build spend tracking page with Recharts bar chart | ✅ Closed (PR #60 merged) |
 | 30 | [M3.2] Implement certification CRUD with computed status | ✅ Closed (PR #61 merged) |
 | 31 | [M3.2] Build compliance page with supplier certification traffic lights | ✅ Closed (PR #61 merged) |
-| 32 | [M3.3] Build team settings page and member invitation flow | ❌ Open |
+| 32 | [M3.3] Build team settings page and member invitation flow | ⏳ PR #64 open |
 | 33 | [M3.4] Final QA, OWASP security audit, Lighthouse CI gate, and production deploy | ❌ Open |
 
 ---
@@ -70,13 +72,11 @@ Issues #19–#25 closed on merge of PRs #57 and #58. Issue #26 open for QA sign-
 | Notifications: cron inserts at 60/30/7 day thresholds | ✅ PR #58 (`/api/cron/notifications`) |
 | Spend: `/api/spend` endpoint + page with Recharts bar chart | ✅ Merged (PR #60) |
 | Compliance: certification CRUD API + compliance page with traffic lights | ✅ Merged (PR #61) |
-| Team settings: member invitation flow (Admin only) | ❌ Issue #32 |
+| Team settings: member invitation flow (Admin only) | ⏳ PR #64 open |
 
-**Remaining page stubs on `main`:**
-- `app/(app)/settings/team/page.tsx` → `ComingSoonPage` (issue #32)
-- `app/api/team/route.ts` → 501 Not Implemented (issue #32)
+**Remaining page stubs on `main`:** None — all resolved (stubs were replaced in PRs #60, #61, #64)
 
-*(Spend and compliance stubs resolved in PRs #60 and #61 — merged 2026-04-09)*
+*(Team stubs resolved in PR #64 — pending CI + merge)*
 
 ---
 
@@ -110,7 +110,7 @@ Issues #19–#25 closed on merge of PRs #57 and #58. Issue #26 open for QA sign-
 | Unit + integration tests (Vitest) | ✅ | `__tests__/lib/`, `__tests__/api/` |
 | E2E tests (Playwright) | ✅ | contracts, suppliers, dashboard, notifications specs |
 | 70%+ test coverage | ❓ | Coverage report not yet generated — verify before Phase 6 |
-| TDD for Sprint 3 features | ⏳ | Issues #28–#31 TDD complete (merged); #27, #32 remaining |
+| TDD for Sprint 3 features | ✅ | All Sprint 3 TDD complete — #28–#31 merged, #27/#32 in PRs #63/#64 |
 
 ---
 
@@ -197,22 +197,22 @@ Security gates:
 
 ---
 
-### Phase 4 — Sprint 3: Email Alerts + Team Invitation (Apr 15–16)
+### Phase 4 — Sprint 3: Email Alerts + Team Invitation ⏳ PRs OPEN
 
-**`feature/27-email-alerts`**
-- Resend integration (`RESEND_API_KEY` in Vercel env)
-- Update cron route to send email at 60/30/7 thresholds alongside DB insert
-- Deduplication via `idx_notifications_unique` (no code guards needed)
-- Tests: AC-08-x
+**`feature/27-email-renewal-alerts`** → PR #63
+- Augmented cron route to send Resend email after each successful `idx_notifications_unique` insert
+- Email deduplication via DB unique index (no code guards needed)
+- `escapeHtml()` / `sanitizeEmailHeader()` security helpers added
+- 8 new unit tests: AC-08-1, AC-08-2, AC-08-3
 
-**`feature/32-team-invitation`**
-- Team settings page (`/settings/team`) — Admin only (403 for Member)
-- `GET /api/team` — list org members
-- `POST /api/team/invite` — Supabase Auth admin invite email
-- `PUT /api/team/[id]` — promote/demote role
-- Tests: AC-11-x
+**`feature/32-team-settings-invite`** → PR #64
+- Full team settings UI at `/settings/team` (Admin only — 403 for Member)
+- `GET /api/team`, `POST /api/team/invite`, `PUT /api/team/[id]`, `DELETE /api/team/[id]`
+- 18 unit tests (AC-11-1, AC-11-3), E2E spec, playwright `team-pages` project registered
+- `params.id` UUID validation (security-reviewer A03 finding)
+- 211 tests passing
 
-**Closes:** Issues #27, #32
+**Closes:** Issues #27, #32 (on merge)
 
 ---
 
@@ -255,6 +255,6 @@ Security gates:
 | Apr 7–8 | Phase 1 | Infrastructure: CI/CD (8 stages) + agents + PR template | chore | ✅ Done (PR #55) |
 | Apr 8–9 | Phase 2 | Sprint 2: dashboard risk UI + notifications (parallel worktrees) | #19–#26 | ✅ Done (PRs #57, #58 merged) |
 | Apr 9 | Phase 3 | Sprint 3: spend + certifications | #28–#31 | ✅ Done (PRs #60, #61 merged) |
-| Apr 15–16 | Phase 4 | Sprint 3: email alerts + team invitation | #27, #32 | ❌ Not started |
+| Apr 9 | Phase 4 | Sprint 3: email alerts + team invitation | #27, #32 | ⏳ PRs #63, #64 open |
 | Apr 17–19 | Phase 5 | Documentation (README, blog, reflection, video) | — | ❌ Not started |
 | Apr 20–22 | Phase 6 | Final QA, security audit, showcase submission | #33 | ❌ Not started |
