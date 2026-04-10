@@ -74,8 +74,11 @@ function mockSupabaseClient(opts: {
 }) {
   const { contracts = [], profileEmail = OWNER_EMAIL, insertError = null } = opts
 
-  // contracts: awaitable select chain
-  const contractsQb: any = { select: vi.fn().mockReturnThis() }
+  // contracts: awaitable select → limit chain
+  const contractsQb: any = {
+    select: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
+  }
   contractsQb.then = (resolve: (v: unknown) => unknown) =>
     Promise.resolve({ data: contracts, error: null }).then(resolve)
 
@@ -232,7 +235,7 @@ describe('GET /api/cron/notifications — email sending (AC-08-1, AC-08-2, AC-08
     const notificationsQb = {
       insert: vi.fn().mockResolvedValue({ data: null, error: null }),
     }
-    const contractsQb: any = { select: vi.fn().mockReturnThis() }
+    const contractsQb: any = { select: vi.fn().mockReturnThis(), limit: vi.fn().mockReturnThis() }
     contractsQb.then = (resolve: (v: unknown) => unknown) =>
       Promise.resolve({ data: [mockContract, contract2], error: null }).then(resolve)
 
