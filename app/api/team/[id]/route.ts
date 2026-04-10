@@ -28,6 +28,14 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     )
   }
 
+  const uuidResult = z.string().uuid().safeParse(params.id)
+  if (!uuidResult.success) {
+    return NextResponse.json(
+      { data: null, error: { message: 'Invalid member ID', code: '400' } },
+      { status: 400 }
+    )
+  }
+
   const body = await req.json().catch(() => ({}))
   const parsed = UpdateRoleSchema.safeParse(body)
   if (!parsed.success) {
@@ -69,6 +77,14 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
     return NextResponse.json(
       { data: null, error: { message: 'Cannot delete your own account', code: '403' } },
       { status: 403 }
+    )
+  }
+
+  const uuidResultDel = z.string().uuid().safeParse(params.id)
+  if (!uuidResultDel.success) {
+    return NextResponse.json(
+      { data: null, error: { message: 'Invalid member ID', code: '400' } },
+      { status: 400 }
     )
   }
 

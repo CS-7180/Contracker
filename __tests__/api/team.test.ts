@@ -90,7 +90,7 @@ function deleteQb(error: unknown = null) {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const ADMIN_UUID = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
-const MEMBER_UUID = 'm1n2o3p4-q5r6-7890-stuv-wx1234567890'
+const MEMBER_UUID = 'b2c3d4e5-f6a7-8901-bcde-f12345678901'
 
 const mockMembers = [
   {
