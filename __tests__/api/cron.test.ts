@@ -25,7 +25,7 @@ vi.mock('resend', () => ({
   })),
 }))
 
-vi.mock('@/lib/supabase/server', () => ({
+vi.mock('@supabase/supabase-js', () => ({
   createClient: vi.fn(),
 }))
 
@@ -36,11 +36,11 @@ vi.mock('@/lib/alerts', () => ({
   ALERT_THRESHOLDS: [60, 30, 7] as const,
 }))
 
-import { createClient } from '@/lib/supabase/server'
+import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { shouldSendAlert } from '@/lib/alerts'
 import { GET } from '@/app/api/cron/notifications/route'
 
-const mockCreateClient = vi.mocked(createClient)
+const mockCreateClient = vi.mocked(createServiceClient)
 const mockShouldSendAlert = vi.mocked(shouldSendAlert)
 
 // ─── Constants ────────────────────────────────────────────────────────────────
