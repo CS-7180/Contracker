@@ -53,60 +53,6 @@ type NotificationItem = {
   createdAt: string
 }
 
-// Mock notifications (until real API sends them)
-const MOCK_NOTIFICATIONS: NotificationItem[] = [
-  {
-    id: '1',
-    contractName: 'Azure Cloud Services Agreement',
-    contractId: 'cnt-azure',
-    supplierName: 'Microsoft Corp',
-    daysRemaining: 6,
-    threshold: 7,
-    isRead: false,
-    createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-  },
-  {
-    id: '2',
-    contractName: 'Salesforce CRM Enterprise License',
-    contractId: 'cnt-sfdc',
-    supplierName: 'Salesforce Inc',
-    daysRemaining: 28,
-    threshold: 30,
-    isRead: false,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-  },
-  {
-    id: '3',
-    contractName: 'Office 365 Business Premium',
-    contractId: 'cnt-o365',
-    supplierName: 'Microsoft Corp',
-    daysRemaining: 7,
-    threshold: 7,
-    isRead: false,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 14).toISOString(),
-  },
-  {
-    id: '4',
-    contractName: 'AWS Infrastructure Services',
-    contractId: 'cnt-aws',
-    supplierName: 'Amazon Web Services',
-    daysRemaining: 58,
-    threshold: 60,
-    isRead: true,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-  },
-  {
-    id: '5',
-    contractName: 'Slack Business+ Subscription',
-    contractId: 'cnt-slack',
-    supplierName: 'Salesforce Inc',
-    daysRemaining: 29,
-    threshold: 30,
-    isRead: true,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
-  },
-]
-
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { staggerChildren: 0.08 } },
@@ -210,19 +156,53 @@ function daysUntil(dateStr: string): number {
 function AlertsFeedPanel() {
   const shouldReduceMotion = useReducedMotion()
   const { toast } = useToast()
-  const [notifications, setNotifications] = useState<NotificationItem[]>(MOCK_NOTIFICATIONS)
+  const [notifications, setNotifications] = useState<NotificationItem[]>([])
+  const [loading, setLoading] = useState(true)
   const [hoveredId, setHoveredId] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function fetchNotifications() {
+      try {
+        const res = await fetch('/api/notifications')
+        const json = await res.json()
+        if (!res.ok || json.error) return
+        const today = new Date()
+        setNotifications(
+          (json.data ?? []).map((n: any) => ({
+            id: n.id,
+            contractName: n.contracts?.name ?? 'Unknown contract',
+            contractId: n.contracts?.id ?? '',
+            supplierName: n.contracts?.suppliers?.name ?? 'Unknown supplier',
+            daysRemaining: n.contracts?.renewal_date
+              ? Math.max(0, Math.round(
+                  (new Date(n.contracts.renewal_date).getTime() - today.getTime()) / 86_400_000
+                ))
+              : 0,
+            threshold: n.threshold_days as 7 | 30 | 60,
+            isRead: n.is_read,
+            createdAt: n.created_at,
+          }))
+        )
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchNotifications()
+  }, [])
 
   const unreadCount = notifications.filter((n) => !n.isRead).length
 
   function markAsRead(id: string) {
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)))
     toast({ title: 'Marked as read', duration: 2000 })
+    fetch(`/api/notifications/${id}`, { method: 'PUT' })
   }
 
   function markAllAsRead() {
+    const unreadIds = notifications.filter((n) => !n.isRead).map((n) => n.id)
     setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))
     toast({ title: 'All alerts marked as read' })
+    Promise.all(unreadIds.map((id) => fetch(`/api/notifications/${id}`, { method: 'PUT' })))
   }
 
   const sorted = [...notifications].sort((a, b) => {
@@ -267,7 +247,19 @@ function AlertsFeedPanel() {
 
       {/* Scrollable feed */}
       <div className="relative flex-1 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(99,102,241,0.3) transparent' }}>
-        {sorted.length === 0 ? (
+        {loading ? (
+          <div className="divide-y divide-white/[0.04]">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex items-start gap-3 p-4">
+                <div className="h-7 w-7 rounded-full bg-white/[0.06] animate-shimmer flex-shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-3.5 w-3/4 rounded bg-white/[0.06] animate-shimmer" />
+                  <div className="h-3 w-1/2 rounded bg-white/[0.04] animate-shimmer" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : sorted.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full py-16 text-center px-4">
             {shouldReduceMotion ? (
               <Bell className="h-10 w-10 text-muted-foreground/20 mb-3" />
