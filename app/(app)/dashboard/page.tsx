@@ -195,11 +195,14 @@ function AlertsFeedPanel() {
   function markAsRead(id: string) {
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)))
     toast({ title: 'Marked as read', duration: 2000 })
+    fetch(`/api/notifications/${id}`, { method: 'PUT' })
   }
 
   function markAllAsRead() {
+    const unreadIds = notifications.filter((n) => !n.isRead).map((n) => n.id)
     setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))
     toast({ title: 'All alerts marked as read' })
+    Promise.all(unreadIds.map((id) => fetch(`/api/notifications/${id}`, { method: 'PUT' })))
   }
 
   const sorted = [...notifications].sort((a, b) => {
