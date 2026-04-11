@@ -52,12 +52,12 @@ describe('CI Workflow (.github/workflows/ci.yml)', () => {
     expect(source, 'ci.yml lint job must run npm run type-check').toContain('npm run type-check')
   })
 
-  it('🟢 ci.yml defines a test job that runs npm test', () => {
+  it('🟢 ci.yml defines a test job that runs npm run test:coverage', () => {
     const source = readFileSync(CI_YML, 'utf-8')
     expect(
       source,
-      'ci.yml test job must run npm test'
-    ).toContain('npm test')
+      'ci.yml test job must run npm run test:coverage (coverage gate enforced in CI)'
+    ).toContain('npm run test:coverage')
   })
 
   it('🟢 ci.yml defines a build job that runs npm run build', () => {
