@@ -51,7 +51,8 @@ jobs:
           [ -n "$V4" ] && echo "RESEND_API_KEY=$V4" >> .env.test || true
           [ -n "$V5" ] && echo "SENTRY_DSN=$V5" >> .env.test || true
           [ -n "$V5" ] && echo "NEXT_PUBLIC_SENTRY_DSN=$V5" >> .env.test || true
-      - run: npm test
+      - name: Run tests with coverage gate (≥70% lines/branches/functions)
+        run: npm run test:coverage
 
   # ── Stage 3: Production Build ─────────────────────────────────────────────
   build:
