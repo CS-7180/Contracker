@@ -205,10 +205,9 @@ function AlertsFeedPanel() {
     Promise.all(unreadIds.map((id) => fetch(`/api/notifications/${id}`, { method: 'PUT' })))
   }
 
-  const sorted = [...notifications].sort((a, b) => {
-    if (a.isRead !== b.isRead) return a.isRead ? 1 : -1
-    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  })
+  const sorted = [...notifications]
+    .filter((n) => !n.isRead)
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
   const itemVariants = {
     hidden: { opacity: 0, x: shouldReduceMotion ? 0 : 16 },
