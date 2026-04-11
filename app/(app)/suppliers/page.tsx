@@ -135,8 +135,7 @@ export default async function SuppliersPage({ searchParams }: PageProps) {
                 return (
                   <tr
                     key={s.id}
-                    className="group transition-all duration-200 animate-flicker-in hover:bg-gradient-to-r hover:from-violet-500/[0.05] hover:to-transparent"
-                    style={{ animationDelay: `${index * 30}ms` }}
+                    className="group transition-all duration-200 hover:bg-gradient-to-r hover:from-violet-500/[0.05] hover:to-transparent"
                   >
                     {/* Supplier with gradient avatar */}
                     <td className="px-5 py-4">
