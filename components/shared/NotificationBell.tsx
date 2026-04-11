@@ -16,7 +16,11 @@ export function NotificationBell() {
         const res = await fetch('/api/notifications')
         if (!res.ok) return
         const json = await res.json()
-        setUnreadCount(Array.isArray(json.data) ? json.data.length : 0)
+        setUnreadCount(
+          Array.isArray(json.data)
+            ? json.data.filter((n: { is_read: boolean }) => !n.is_read).length
+            : 0
+        )
       } catch {
         // silently ignore — bell just shows no badge
       }
