@@ -177,15 +177,14 @@ export default async function ContractsPage({
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/[0.04]">
-                {paged.map((c: any, index: number) => (
+                {paged.map((c: any) => (
                   <tr
                     key={c.id}
                     className={cn(
-                      'group transition-all duration-200 animate-flicker-in',
+                      'group transition-all duration-200',
                       'hover:bg-gradient-to-r hover:from-indigo-500/[0.06] hover:to-transparent',
                       riskStripeClass(c.status)
                     )}
-                    style={{ animationDelay: `${index * 30}ms` }}
                   >
                     {/* Name + contract number */}
                     <td className="px-5 py-4">
