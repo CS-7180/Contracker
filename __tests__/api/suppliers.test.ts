@@ -300,10 +300,83 @@ describe('PUT /api/suppliers/:id', () => {
   })
 })
 
+// ─── GET /api/suppliers/:id — error paths ────────────────────────────────────
+
+describe('GET /api/suppliers/:id — error paths', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('returns 404 when supplier does not exist', async () => {
+    const qb = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({ data: null, error: { message: 'Not found' } }),
+    }
+    mockCreateClient.mockReturnValue({ ...authClient('user-1'), from: vi.fn().mockReturnValue(qb) } as any)
+
+    const res = await getSupplier(
+      new Request('http://localhost/api/suppliers/missing-id'),
+      { params: { id: 'missing-id' } }
+    )
+    expect(res.status).toBe(404)
+    const body = await res.json()
+    expect(body.error.code).toBe('404')
+  })
+})
+
+// ─── PUT /api/suppliers/:id — error paths ────────────────────────────────────
+
+describe('PUT /api/suppliers/:id — error paths', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('returns 400 when body is not valid JSON', async () => {
+    mockCreateClient.mockReturnValue({ ...authClient('user-1'), from: vi.fn() } as any)
+
+    const req = new Request('http://localhost/api/suppliers/supplier-1', {
+      method: 'PUT',
+      body: 'not-json',
+      headers: { 'Content-Type': 'application/json' },
+    })
+    const res = await putSupplier(req, { params: { id: 'supplier-1' } })
+    expect(res.status).toBe(400)
+    const body = await res.json()
+    expect(body.error.message).toMatch(/Invalid JSON/i)
+  })
+
+  it('returns 500 when DB update fails', async () => {
+    const qb = {
+      update: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } }),
+    }
+    mockCreateClient.mockReturnValue({ ...authClient('user-1'), from: vi.fn().mockReturnValue(qb) } as any)
+
+    const req = new Request('http://localhost/api/suppliers/supplier-1', {
+      method: 'PUT',
+      body: JSON.stringify({ name: 'Updated Corp' }),
+      headers: { 'Content-Type': 'application/json' },
+    })
+    const res = await putSupplier(req, { params: { id: 'supplier-1' } })
+    expect(res.status).toBe(500)
+  })
+})
+
 // ─── DELETE /api/suppliers/:id ────────────────────────────────────────────────
 
 describe('DELETE /api/suppliers/:id', () => {
   beforeEach(() => vi.clearAllMocks())
+
+  it('returns 401 when not authenticated', async () => {
+    const qb = {
+      update: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockResolvedValue({ error: null }),
+    }
+    mockCreateClient.mockReturnValue({ ...authClient(null), from: vi.fn().mockReturnValue(qb) } as any)
+
+    const req = new Request('http://localhost/api/suppliers/supplier-1', { method: 'DELETE' })
+    const res = await deleteSupplier(req, { params: { id: 'supplier-1' } })
+    expect(res.status).toBe(401)
+  })
 
   it('soft-deletes by setting status=inactive, not hard-deleting (AC-02-3)', async () => {
     const profileQb = {
@@ -326,5 +399,25 @@ describe('DELETE /api/suppliers/:id', () => {
     // Verify soft-delete: update() called with inactive, never delete()
     expect(updateQb.update).toHaveBeenCalledWith({ status: 'inactive' })
     expect(updateQb.eq).toHaveBeenCalledWith('id', 'supplier-1')
+  })
+
+  it('returns 500 when DB soft-delete fails', async () => {
+    const profileQb = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({ data: { role: 'admin' }, error: null }),
+    }
+    const updateQb = {
+      update: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockResolvedValue({ error: { message: 'DB constraint error' } }),
+    }
+    mockCreateClient.mockReturnValue({
+      ...authClient('admin-1'),
+      from: vi.fn((table: string) => (table === 'profiles' ? profileQb : updateQb)),
+    } as any)
+
+    const req = new Request('http://localhost/api/suppliers/supplier-1', { method: 'DELETE' })
+    const res = await deleteSupplier(req, { params: { id: 'supplier-1' } })
+    expect(res.status).toBe(500)
   })
 })

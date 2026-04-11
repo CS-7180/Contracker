@@ -13,6 +13,21 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
+      // Only measure business-logic files — exclude config, UI pages, Supabase wrappers
+      include: ['lib/**/*.ts', 'app/api/**/*.ts'],
+      exclude: [
+        'lib/supabase/**',
+        'node_modules/**',
+        '**/__tests__/**',
+        '**/*.test.*',
+        'e2e/**',
+      ],
+      thresholds: {
+        lines: 70,
+        branches: 70,
+        functions: 70,
+        statements: 70,
+      },
     },
   },
   resolve: {
