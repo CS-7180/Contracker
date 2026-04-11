@@ -37,13 +37,18 @@ test.describe('App pages smoke — dark theme + layout', () => {
       // Sidebar must be present and visible (not collapsed, not white)
       await expect(page.locator('aside')).toBeVisible()
 
-      // All sidebar nav links visible
+      // All sidebar nav links visible (scoped to aside + exact match to avoid strict-mode
+      // violations when page content contains links whose accessible name includes a nav label,
+      // e.g. a supplier named "E2E Dashboard Supplier")
+      const sidebar = page.locator('aside')
       for (const label of sidebarLinks) {
-        await expect(page.getByRole('link', { name: label })).toBeVisible()
+        await expect(sidebar.getByRole('link', { name: label, exact: true })).toBeVisible()
       }
 
-      // Page heading matches the route (in the top header bar)
-      await expect(page.getByRole('heading', { name: heading, exact: false })).toBeVisible()
+      // Page heading matches the route — scoped to <header> to avoid strict-mode violations
+      // caused by pages that also have an h2 (or h1) containing the same route name
+      // (e.g. Contracts page: layout h1="Contracts" AND page h2="Contracts").
+      await expect(page.locator('header').getByRole('heading', { name: heading, level: 1, exact: true })).toBeVisible()
 
       // No error boundary rendered
       await expect(page.getByText(/something went wrong/i)).not.toBeVisible()

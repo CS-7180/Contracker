@@ -44,9 +44,10 @@ test.describe('Dashboard — unauthenticated redirect', () => {
 test.describe('Dashboard — authenticated renders', () => {
   test.skip(!hasAuth, 'E2E_EMAIL not configured — add to .env.test to enable')
 
-  test('renders "Dashboard" heading (level 2)', async ({ page }) => {
+  test('renders page heading (level 2)', async ({ page }) => {
     await page.goto('/dashboard')
-    await expect(page.getByRole('heading', { name: /^dashboard$/i, level: 2 })).toBeVisible()
+    // Dashboard page uses "Command Center" as its h2 heading
+    await expect(page.getByRole('heading', { name: /command center/i, level: 2 })).toBeVisible()
   })
 
   test('dark theme applied', async ({ page }) => {
@@ -159,7 +160,9 @@ test.describe('AC-05: Dashboard data accuracy', () => {
   // RED: "Coming soon" placeholder shown instead of contract names
   test('expiring-soon contract appears in list — AC-05-2', async ({ page }) => {
     await page.goto('/dashboard')
-    await expect(page.getByText(/e2e dashboard expiring soon contract/i)).toBeVisible({ timeout: 10000 })
+    // Use .first() because parallel workers each call beforeAll and may create multiple
+    // contracts with the same name; any matching row proves the feature works.
+    await expect(page.getByText(/e2e dashboard expiring soon contract/i).first()).toBeVisible({ timeout: 10000 })
   })
 
   // PASSES even on RED (text simply not present → not.toBeVisible is satisfied)
@@ -236,14 +239,17 @@ test.describe('AC-06-5: Expiring-soon sorted red → amber → green', () => {
 
   test('red contract appears before amber in expiring-soon list (AC-06-5)', async ({ page }) => {
     await page.goto('/dashboard')
-    await expect(page.getByText(/e2e red risk contract/i)).toBeVisible({ timeout: 10000 })
-    await expect(page.getByText(/e2e amber risk contract/i)).toBeVisible()
+    // Use .first() — parallel workers each call beforeAll, potentially creating duplicate contract
+    // names; any matching element confirms the data is visible.
+    await expect(page.getByText(/e2e red risk contract/i).first()).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText(/e2e amber risk contract/i).first()).toBeVisible()
 
-    const redIndex = await page.getByText(/e2e red risk contract/i).evaluate((el) => {
+    // Ordering check: evaluate against the DOM — duplicate names don't affect the index comparison
+    const redIndex = await page.evaluate(() => {
       const items = Array.from(document.querySelectorAll('li'))
       return items.findIndex((li) => li.textContent?.includes('E2E Red Risk Contract'))
     })
-    const amberIndex = await page.getByText(/e2e amber risk contract/i).evaluate((el) => {
+    const amberIndex = await page.evaluate(() => {
       const items = Array.from(document.querySelectorAll('li'))
       return items.findIndex((li) => li.textContent?.includes('E2E Amber Risk Contract'))
     })

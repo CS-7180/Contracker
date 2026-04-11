@@ -142,39 +142,44 @@ test.describe('AC-10: Certification status on compliance page', () => {
 
   test('supplier row is visible on compliance page (AC-10-5)', async ({ page }) => {
     await page.goto('/compliance')
-    await expect(page.getByText('E2E Compliance Supplier')).toBeVisible({ timeout: 10000 })
+    // .first() guards against strict-mode violations from multiple matches
+    await expect(page.getByText('E2E Compliance Supplier').first()).toBeVisible({ timeout: 10000 })
   })
 
   test('supplier with expired cert shows Non-compliant badge (AC-10-4)', async ({ page }) => {
     await page.goto('/compliance')
-    const row = page.locator('tr').filter({ hasText: 'E2E Compliance Supplier' })
+    // .first() guards against strict-mode violations when parallel workers each call beforeAll
+    // and create multiple "E2E Compliance Supplier" rows; checking the first match is sufficient.
+    const row = page.locator('tr').filter({ hasText: 'E2E Compliance Supplier' }).first()
     await expect(row).toBeVisible({ timeout: 10000 })
     await expect(row.getByText('Non-compliant')).toBeVisible()
   })
 
   test('ISO cert chip visible in supplier row (AC-10-5)', async ({ page }) => {
     await page.goto('/compliance')
-    const row = page.locator('tr').filter({ hasText: 'E2E Compliance Supplier' })
+    const row = page.locator('tr').filter({ hasText: 'E2E Compliance Supplier' }).first()
     await expect(row.getByText('ISO')).toBeVisible({ timeout: 10000 })
   })
 
   test('NDA cert chip visible in supplier row (AC-10-5)', async ({ page }) => {
     await page.goto('/compliance')
-    const row = page.locator('tr').filter({ hasText: 'E2E Compliance Supplier' })
+    const row = page.locator('tr').filter({ hasText: 'E2E Compliance Supplier' }).first()
     await expect(row.getByText('NDA')).toBeVisible({ timeout: 10000 })
   })
 
   test('Insurance cert chip visible in supplier row (AC-10-5)', async ({ page }) => {
     await page.goto('/compliance')
-    const row = page.locator('tr').filter({ hasText: 'E2E Compliance Supplier' })
+    const row = page.locator('tr').filter({ hasText: 'E2E Compliance Supplier' }).first()
     await expect(row.getByText('Insurance')).toBeVisible({ timeout: 10000 })
   })
 
   test('Manage link navigates to supplier profile', async ({ page }) => {
     await page.goto('/compliance')
-    const row = page.locator('tr').filter({ hasText: 'E2E Compliance Supplier' })
-    await expect(row).toBeVisible({ timeout: 10000 })
-    await row.getByRole('link', { name: /manage/i }).click()
+    // Use the supplierId in the href to pinpoint the exact row for this test's data,
+    // avoiding clicking the wrong row when multiple "E2E Compliance Supplier" rows exist.
+    const manageLink = page.locator(`a[href="/suppliers/${supplierId}"]`).first()
+    await expect(manageLink).toBeVisible({ timeout: 10000 })
+    await manageLink.click()
     await expect(page).toHaveURL(new RegExp(`/suppliers/${supplierId}`))
   })
 })
