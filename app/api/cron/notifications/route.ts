@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
-import { createClient } from '@/lib/supabase/server'
+import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { shouldSendAlert, ALERT_THRESHOLDS } from '@/lib/alerts'
 
 // Escape user-supplied content before embedding in HTML email bodies (A03 Injection)
@@ -29,7 +29,11 @@ export async function GET(req: Request) {
     )
   }
 
-  const supabase = createClient()
+  // Use service role key to bypass RLS — cron has no user session
+  const supabase = createServiceClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
   // Lazy-init Resend inside handler so module-level evaluation during `next build`
   // doesn't throw when RESEND_API_KEY is absent in the CI build environment.
   const resend = new Resend(process.env.RESEND_API_KEY)
