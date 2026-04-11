@@ -83,14 +83,10 @@ test.describe('Spend — authenticated renders', () => {
 
   test('either spend tables or empty state is visible after load', async ({ page }) => {
     await page.goto('/spend')
-    // Wait for loading spinner to disappear
-    await expect(page.getByText(/total portfolio spend/i)).toBeVisible()
-    // Give the client-side fetch time to complete
-    await page.waitForTimeout(2000)
-
-    const hasSupplierTable = await page.getByText(/supplier breakdown/i).isVisible().catch(() => false)
-    const hasEmptyState = await page.getByText(/no spend data found/i).isVisible().catch(() => false)
-    expect(hasSupplierTable || hasEmptyState).toBe(true)
+    // Wait for the client-side fetch to resolve by asserting that either the supplier
+    // breakdown section OR the empty-state message becomes visible (15s budget for slow CI).
+    await expect(page.getByText(/supplier breakdown|no spend data found for the selected period/i))
+      .toBeVisible({ timeout: 15000 })
   })
 })
 
@@ -163,14 +159,16 @@ test.describe('AC-09: Spend data accuracy', () => {
   test('supplier appears in Supplier Breakdown table (AC-09-1)', async ({ page }) => {
     await page.goto('/spend')
     await expect(page.getByText('Supplier Breakdown')).toBeVisible({ timeout: 10000 })
-    await expect(page.getByText('E2E Spend Supplier')).toBeVisible({ timeout: 5000 })
+    // Use role-scoped locator + .first() to avoid strict-mode violations when multiple
+    // rows share the name (parallel workers each call beforeAll, or leftover data from past runs).
+    await expect(page.getByRole('cell', { name: 'E2E Spend Supplier' }).first()).toBeVisible({ timeout: 5000 })
   })
 
   test('supplier total spend shows $70,000 (AC-09-1)', async ({ page }) => {
     await page.goto('/spend')
-    await expect(page.getByText('E2E Spend Supplier')).toBeVisible({ timeout: 10000 })
+    await expect(page.getByRole('cell', { name: 'E2E Spend Supplier' }).first()).toBeVisible({ timeout: 10000 })
     // Find the row and check for the formatted value
-    const row = page.locator('table').first().locator('tr').filter({ hasText: 'E2E Spend Supplier' })
+    const row = page.locator('table').first().locator('tr').filter({ hasText: 'E2E Spend Supplier' }).first()
     await expect(row.getByText(/\$70,000/)).toBeVisible()
   })
 

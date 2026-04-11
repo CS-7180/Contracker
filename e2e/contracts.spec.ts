@@ -277,7 +277,8 @@ test.describe('PDF upload — AC-03-5 (non-PDF rejected)', () => {
       buffer: bigBuffer,
     })
 
-    await expect(page.getByText(/exceeds the 10 mb size limit/i)).toBeVisible()
+    // PdfDropZone validation message for oversized files is "File must be under 10 MB."
+    await expect(page.getByText(/file must be under 10 mb/i)).toBeVisible()
     await expect(page).toHaveURL(/\/contracts\/new/)
   })
 })
@@ -475,10 +476,16 @@ test.describe('Contract list — /contracts', () => {
   })
 
   test('shows the test contract with supplier and status badge (AC-04-1)', async ({ page }) => {
-    await page.goto('/contracts')
-    await expect(page.getByRole('link', { name: /e2e list contract/i })).toBeVisible()
-    await expect(page.getByText(/e2e list supplier/i)).toBeVisible()
-    await expect(page.getByText(/active|expiring|expired/i).first()).toBeVisible()
+    // Navigate with search param to avoid pagination issues when many contracts exist in the DB
+    // and to avoid strict-mode violations from duplicate "E2E List Contract" names in parallel runs.
+    await page.goto('/contracts?search=E2E+List+Contract')
+    await expect(page.getByRole('link', { name: /e2e list contract/i }).first()).toBeVisible({ timeout: 10000 })
+    // Scope supplier name check to table cells — the name also appears as a hidden <option>
+    // in the supplier filter dropdown, which causes .first() to resolve to a hidden element.
+    await expect(page.getByRole('cell', { name: /e2e list supplier/i }).first()).toBeVisible()
+    // Scope status check to table cells — the text also appears in hidden <option> elements
+    // inside the status filter dropdown, which would cause .first() to resolve to a hidden element.
+    await expect(page.getByRole('cell').getByText(/active|expiring|expired/i).first()).toBeVisible()
   })
 
   test('search input filters contracts by name (AC-04-2)', async ({ page }) => {
@@ -486,7 +493,8 @@ test.describe('Contract list — /contracts', () => {
     await page.getByPlaceholder(/search/i).fill('E2E List Contract')
     await page.getByRole('button', { name: /^search$/i }).click()
     await page.waitForURL(/search=E2E/)
-    await expect(page.getByRole('link', { name: /e2e list contract/i })).toBeVisible()
+    // .first() because parallel beforeAll calls may leave multiple "E2E List Contract" rows
+    await expect(page.getByRole('link', { name: /e2e list contract/i }).first()).toBeVisible()
   })
 
   test('status filter updates URL with status param (AC-04-3)', async ({ page }) => {

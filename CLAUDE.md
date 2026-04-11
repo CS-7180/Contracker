@@ -151,7 +151,7 @@ See `docs/playwright-protocol.md` for the full Playwright E2E testing checklist,
 
 ## Sprint 2 → Sprint 3 Handoff (Raj → Vineela)
 
-Sprint 2 is complete. Issues #15–#18 are all merged to `main`. CI green. Production live at https://contracker.vercel.app.
+Sprint 2 is complete. Issues #15–#18 are all merged to `main`. CI green. Production live at https://contracker-zeta.vercel.app.
 
 **What's done:** Auth, supplier CRUD, contract CRUD + PDF upload, contract list with search/filter/sort/pagination, risk library (`lib/risk.ts`), dashboard API (`GET /api/dashboard`), and dashboard UI with live stat cards and expiring-soon list.
 
