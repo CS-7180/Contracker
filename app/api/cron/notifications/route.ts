@@ -46,7 +46,9 @@ export async function GET(req: Request) {
     )
   }
 
-  const today = new Date()
+  // Normalize to midnight UTC so diffInDays() returns whole-day integers
+  // matching the DATE values stored in Postgres (also midnight UTC)
+  const today = new Date(new Date().toISOString().split('T')[0] + 'T00:00:00Z')
   let inserted = 0
 
   for (const contract of contracts as any[]) {
