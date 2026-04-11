@@ -96,6 +96,7 @@ export function PdfDropZone({ onChange, error, currentFileName }: PdfDropZonePro
           ref={inputRef}
           type="file"
           accept=".pdf,application/pdf"
+          aria-label="Contract PDF"
           className="hidden"
           onChange={handleChange}
         />

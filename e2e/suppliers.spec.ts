@@ -73,9 +73,12 @@ test.describe('Suppliers list — /suppliers', () => {
 
   test('sidebar and navigation are visible', async ({ page }) => {
     await page.goto('/suppliers')
-    await expect(page.locator('aside')).toBeVisible()
+    const sidebar = page.locator('aside')
+    await expect(sidebar).toBeVisible()
+    // Scope to aside + exact: true to avoid strict-mode violations when the supplier list
+    // contains rows whose accessible name includes a nav label (e.g. "E2E Dashboard Supplier")
     for (const label of ['Dashboard', 'Contracts', 'Suppliers', 'Compliance', 'Spend', 'Notifications']) {
-      await expect(page.getByRole('link', { name: label })).toBeVisible()
+      await expect(sidebar.getByRole('link', { name: label, exact: true })).toBeVisible()
     }
   })
 
@@ -326,8 +329,10 @@ test.describe('AC-06-4: Supplier risk roll-up badge', () => {
 
   test('supplier with red contract shows red risk badge on supplier list (AC-06-4)', async ({ page }) => {
     await page.goto('/suppliers')
-    // Find the row for this supplier
-    const row = page.locator('tr').filter({ hasText: 'E2E Risk Badge Supplier' })
+    // Scope to the row that contains the detail link for this specific supplierId, so we
+    // don't accidentally pick a leftover "E2E Risk Badge Supplier" row from a prior run
+    // that has no active red contract and shows "—" in the risk column.
+    const row = page.locator('tr').filter({ has: page.locator(`a[href="/suppliers/${supplierId}"]`) })
     await expect(row).toBeVisible({ timeout: 10000 })
     // The risk badge column should show "Red" text label
     await expect(row.getByText(/^red$/i)).toBeVisible()
