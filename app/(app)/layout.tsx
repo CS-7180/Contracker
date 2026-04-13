@@ -16,6 +16,7 @@ import {
   User,
   LogOut,
   Sparkles,
+  BookOpen,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -83,6 +84,15 @@ function SidebarUserFooter() {
             <p className="truncate text-[10px] text-sidebar-foreground/40">{user?.email ?? ''}</p>
           </div>
           <div className="flex items-center gap-0.5">
+            <Link
+              href="/api-docs"
+              className="rounded-md p-1.5 text-sidebar-foreground/30 transition-all hover:bg-white/[0.06] hover:text-sidebar-foreground/70"
+              title="API Docs"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <BookOpen className="h-3.5 w-3.5" />
+            </Link>
             <Link
               href="/settings/team"
               className="rounded-md p-1.5 text-sidebar-foreground/30 transition-all hover:bg-white/[0.06] hover:text-sidebar-foreground/70"
