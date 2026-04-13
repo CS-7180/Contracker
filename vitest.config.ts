@@ -17,6 +17,7 @@ export default defineConfig({
       include: ['lib/**/*.ts', 'app/api/**/*.ts'],
       exclude: [
         'lib/supabase/**',
+        'lib/openapi.ts', // static data file — no logic to test
         'node_modules/**',
         '**/__tests__/**',
         '**/*.test.*',
