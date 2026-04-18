@@ -134,7 +134,7 @@ The `test:` commit prefix convention (enforced in `CLAUDE.md` and the `/tdd` ski
 - **Team invite** — `test: add failing team API tests (AC-11-1, AC-11-3)` → `feat: implement GET /api/team, POST /api/team/invite, PUT+DELETE /api/team/[id]`
 
 ### Unit + integration tests
-245 unit and integration tests across 18 test files using Vitest, covering all acceptance criteria AC-01 through AC-11. Test files in `__tests__/lib/` (risk, alerts) and `__tests__/api/` (contracts, suppliers, certifications, spend, notifications, team, dashboard). All 245 pass with 0 failures.
+252 unit and integration tests across 18 test files using Vitest, covering all acceptance criteria AC-01 through AC-11. Test files in `__tests__/lib/` (risk, alerts) and `__tests__/api/` (contracts, suppliers, certifications, spend, notifications, team, dashboard). All 252 pass with 0 failures. (245 original unit/integration tests + 7 property-based tests added in PR #84.)
 
 ### E2E tests (Playwright)
 114 Playwright E2E tests across all major pages (dashboard, contracts, suppliers, notifications, spend, compliance, team settings), with 7 `fixme`-skipped stubs for seed-data-dependent scenarios. Tests run in CI with `workers=1` for stability. See `e2e/` directory and `playwright.config.ts`.
@@ -229,13 +229,25 @@ Every feature was developed on a dedicated branch following the `feature/[issue-
 ## 8. Bonus Work
 
 ### Property-based testing with fast-check (+3 pts)
-`[PLACEHOLDER — If pursued: install fast-check, add property-based tests to __tests__/lib/risk.test.ts for getContractStatus() and getRiskColour(), verifying invariants hold across randomly generated date inputs.]`
+Implemented in PR #84 (`feature/82-fast-check-property-tests`). fast-check v4.7.0 installed as a dev dependency. Seven property-based tests (AC-PBT-1 through AC-PBT-7) added in a dedicated `describe` block at the bottom of `__tests__/lib/risk.test.ts`, verifying structural invariants for both `getContractStatus()` and `getRiskColour()` across thousands of randomly generated date/integer combinations.
+
+**Invariants verified:**
+- `endDate < today` → always `expired`, regardless of renewalDate or noticePeriodDays
+- `endDate ≥ today` AND `daysToRenewal ≤ noticePeriodDays` → always `expiring`
+- `endDate ≥ today` AND `daysToRenewal > noticePeriodDays` → always `active`
+- `daysToRenewal ≤ noticePeriodDays` → always `red`
+- `noticePeriodDays < daysToRenewal ≤ 60` → always `amber`
+- `daysToRenewal > 60` AND `noticePeriodDays ≤ 60` → always `green`
+- Any valid input → result is always one of `green | amber | red`, never throws
+
+TDD protocol followed: `test:` commit (failing — fast-check not yet installed) → `feat:` commit (install + green) → `refactor:` commit (switch from `fc.date()` to `fc.integer().map()` to eliminate `new Date(NaN)` generation that occurs during fast-check's shrinking phase even with min/max bounds in v4). All 252 tests pass.
 
 ### Mutation testing with Stryker (+3 pts)
-`[PLACEHOLDER — If pursued: install @stryker-mutator/vitest-runner, run on lib/risk.ts, document the mutation score and any surviving mutants found.]`
+Implemented in PR #85 (`feature/83-stryker-mutation-testing`). `@stryker-mutator/core` and `@stryker-mutator/vitest-runner` installed. `stryker.config.mjs` scoped to `lib/risk.ts` only, with HTML reporter writing to `reports/mutation/` (gitignored). Stryker is intentionally **not** wired into CI (too slow for every PR — local-only quality check per AC-MUT-6).
 
-### Agent SDK feature applying W13 patterns (+4 pts)
-`[PLACEHOLDER — If pursued: build a Claude API feature into the app (e.g., AI contract summarizer on the contract detail page) applying W13 Agent SDK patterns with prompt caching.]`
+**Mutation score: 95.65%** (44 killed, 2 survived, 0 timeouts, 0 errors out of 46 mutants).
+
+**Surviving mutants (equivalent — documented per AC-MUT-4):** Both survivors are `StringLiteral` mutations in `getCertificationStatus()` at `lib/risk.ts:42–43`, replacing `'T00:00:00Z'` with `""`. In JavaScript, `new Date('2026-04-18')` and `new Date('2026-04-18T00:00:00Z')` are identical (both UTC midnight per the ECMAScript spec). These are equivalent mutants — no test can distinguish them because the behavior is identical. Not a coverage gap; the `T00:00:00Z` suffix is a code clarity choice.
 
 ---
 
@@ -264,6 +276,9 @@ Every feature was developed on a dedicated branch following the `feature/[issue-
 | API design reference | `docs/api-design.md` |
 | Database schema | `docs/database-schema.md` |
 | Swagger UI / OpenAPI spec | `app/api-docs/page.tsx`, `lib/openapi.ts` |
+| Property-based tests (AC-PBT-1–7) | `__tests__/lib/risk.test.ts` (bottom `describe` block, PR #84) |
+| Stryker mutation config | `stryker.config.mjs` (PR #85) |
+| Mutation score: 95.65% | PR #85 description, 44/46 mutants killed |
 | README (Mermaid + badges) | `README.md` |
 | Sprint 1–2 session logs | `session_logs/2026-03-*/`, `session_logs/2026-03-31-*/` |
 | Sprint 3 session logs | `session_logs/2026-04-09-phase3-spend-certifications.md`, `session_logs/2026-04-10-phase4-complete.md` |
