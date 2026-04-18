@@ -1,9 +1,11 @@
-# Project Requirements Fulfillment
-**Course:** CS7180 — Production Application with Claude Code Mastery
-**Due:** Apr 22, 2026 by 2:59am
-**Team:** Vineela Goli + Raj Laskar
-**Production URL:** https://contracker-zeta.vercel.app
-**GitHub Repo:** https://github.com/CS-7180/Contracker
+# Project Requirements Fulfillment  
+**Course:** CS7180 — Production Application with Claude Code Mastery  
+**Due:** Apr 22, 2026 by 2:59am  
+**Team:** Vineela Goli + Raj Laskar  
+**Production URL:** https://contracker-zeta.vercel.app  
+**GitHub Repo:** https://github.com/CS-7180/Contracker  
+**Blog Post:** https://contracker.hashnode.dev/  
+
 
 ---
 
