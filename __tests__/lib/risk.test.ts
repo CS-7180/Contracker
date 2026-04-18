@@ -57,11 +57,20 @@ describe('risk.ts', () => {
 
 const FIXED_TODAY = new Date('2026-04-18')
 
-// Bound all date arbitraries with both min and max to prevent new Date(NaN) generation
-const pastDate = fc.date({ min: new Date('2000-01-01'), max: new Date('2026-04-17T23:59:59.999Z') })
-const futureOrTodayDate = fc.date({ min: new Date('2026-04-18T00:00:00.000Z'), max: new Date('2031-12-31') })
-const anyDate = fc.date({ min: new Date('2000-01-01'), max: new Date('2031-12-31') })
-const noticePeriod = fc.integer({ min: 1, max: 365 })
+// fc.date() can generate new Date(NaN) even with min/max bounds in fast-check v4.
+// Use integer-timestamp mapping to guarantee valid dates.
+const validDate = (min: Date, max: Date) =>
+  fc.integer({ min: min.getTime(), max: max.getTime() }).map(ms => new Date(ms))
+
+const PAST_MIN  = new Date('2000-01-01T00:00:00.000Z')
+const PAST_MAX  = new Date('2026-04-17T23:59:59.999Z')
+const FUTURE_MIN = new Date('2026-04-18T00:00:00.000Z')
+const FUTURE_MAX = new Date('2031-12-31T23:59:59.999Z')
+
+const pastDate        = validDate(PAST_MIN, PAST_MAX)
+const futureOrTodayDate = validDate(FUTURE_MIN, FUTURE_MAX)
+const anyDate         = validDate(PAST_MIN, FUTURE_MAX)
+const noticePeriod    = fc.integer({ min: 1, max: 365 })
 
 describe('getContractStatus() — property-based (AC-PBT-1–3)', () => {
   it('AC-PBT-1: always expired when endDate is strictly before today', () => {
