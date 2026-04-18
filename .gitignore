@@ -52,6 +52,10 @@ next-env.d.ts
 # Claude Code — local overrides (machine-specific, never commit)
 .claude/settings.local.json
 
+# Stryker mutation testing — output artifacts, not source
+reports/mutation/
+.stryker-tmp/
+
 # Editor
 .vscode/
 .idea/
