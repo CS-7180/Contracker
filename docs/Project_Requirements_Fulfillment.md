@@ -195,10 +195,10 @@ All Sprint 1–3 features were tracked as GitHub Issues (#1–#32, #52, #55, #57
 Every feature was developed on a dedicated branch following the `feature/[issue-number]-short-description` convention (e.g., `feature/32-team-settings-invite`, `feature/77-coverage-report`). Each branch was merged via a PR with a C.L.E.A.R. review.
 
 ### Async standups
-`[PLACEHOLDER — Add async standup entries to docs/standups.md with format: date, who, what was done, what's next, any blockers. Minimum 3 per sprint per partner. Can be reconstructed from session log dates in session_logs/.]`
+Async standup evidence from Vineela and Raj's teams conversation is shown in `docs/Peer Evaluation And Async Standups.docx`.
 
 ### Peer evaluations
-`[PLACEHOLDER — Complete peer evaluations via the channel specified by the professor (Canvas, Google Form, or Slack).]`
+Peer evaluation evidence from Vineela and Raj's teams conversation is shown in `docs/Peer Evaluation And Async Standups.docx`.
 
 ---
 
@@ -214,14 +214,6 @@ Every feature was developed on a dedicated branch following the `feature/[issue-
 ### Video demonstration
 `[PLACEHOLDER — Insert video URL here: _________________]`
 *(5–10 min screencast covering: problem statement, live walkthrough of all 8 pages, Claude Code workflow showing CLAUDE.md + a TDD commit sequence + a C.L.E.A.R. PR review, CI/CD all-green view, and closing.)*
-
-### Individual reflections
-
-**Vineela Goli (500 words):**
-`[PLACEHOLDER — 500-word reflection on Sprint 3 experience (spend, compliance, certifications, email alerts, team invitation), how the TDD workflow shaped the implementation, what worked well and what you'd do differently, and a specific observation about AI-assisted development across the project.]`
-
-**Raj Laskar (500 words):**
-`[PLACEHOLDER — 500-word reflection on Sprint 1–2 experience (auth, supplier/contract CRUD, risk library, dashboard), specific Claude Code insights from CLAUDE.md authoring and the sprint handoff design, what worked well and what you'd do differently.]`
 
 ### Showcase form submission
 `[PLACEHOLDER — Submit the Google Form before Apr 22 by 2:59am: project name (Contracker), production URL, thumbnail, video URL, blog URL. Form: https://docs.google.com/forms/d/e/1FAIpQLScT67tnwjhIETSRwADt57TS_THJSeSGf-xrjTV2nm-XvfFELg/viewform?usp=dialog]`
