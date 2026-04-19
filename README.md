@@ -7,6 +7,7 @@ Contract & Supplier Management Platform built with Next.js 14, Supabase, and dep
 [![Production](https://img.shields.io/badge/production-live-brightgreen)](https://contracker-zeta.vercel.app/)
 
 > **Live app:** [https://contracker-zeta.vercel.app](https://contracker-zeta.vercel.app)
+> **Blog post:** [Building Contracker with TDD + Claude Code](https://medium.com/@vineela.vgoli/contracker-40789a7c71ff)
 
 ---
 
@@ -69,9 +70,11 @@ Open [http://localhost:3000](http://localhost:3000).
 | `npm run build` | Build for production |
 | `npm run type-check` | TypeScript type check |
 | `npm run lint` | ESLint |
-| `npm test` | Run unit + integration tests (211 tests) |
+| `npm test` | Run unit + integration tests (252 tests) |
+| `npm run test:coverage` | Run tests with coverage report (≥70% gate) |
 | `npm run test:watch` | Tests in watch mode |
-| `npm run test:e2e` | Playwright E2E tests (7 specs) |
+| `npm run test:e2e` | Playwright E2E tests (7 specs, 114 tests) |
+| `npx stryker run` | Mutation testing scoped to `lib/risk.ts` (local only) |
 
 ## Running Tests
 
@@ -103,13 +106,15 @@ app/
 │   ├── certifications/, notifications/
 │   ├── dashboard/, spend/, team/
 │   └── cron/notifications/    → Daily alert cron
+├── api-docs/                  → Swagger UI API explorer (/api-docs)
 components/                    → shadcn/ui + custom components
 lib/
-├── risk.ts                    → getContractStatus(), getRiskColour() — primary TDD targets
+├── risk.ts                    → getContractStatus(), getRiskColour(), getCertificationStatus() — primary TDD targets
 ├── alerts.ts                  → shouldSendAlert() — alert threshold logic
+├── openapi.ts                 → OpenAPI spec (excluded from coverage)
 supabase/migrations/           → SQL schema + seed data
-__tests__/                     → Vitest unit + integration tests (211)
-e2e/                           → Playwright E2E specs (7)
+__tests__/                     → Vitest unit + integration tests (252)
+e2e/                           → Playwright E2E specs (7 specs, 114 tests)
 session_logs/                  → Development session logs
 docs/                          → PRD, schema, API design, sprint plan
 ```
@@ -127,9 +132,25 @@ docs/                          → PRD, schema, API design, sprint plan
 | Charts | Recharts |
 | Email | Resend |
 | Testing | Vitest + React Testing Library + Playwright |
+| Property-based testing | fast-check v4.7.0 |
+| Mutation testing | Stryker (95.65% mutation score on `lib/risk.ts`) |
 | CI/CD | GitHub Actions (8 stages) + Vercel |
 | Error Tracking | Sentry |
 | Uptime | Better Uptime |
+
+---
+
+## Bonus Work
+
+### Property-based testing (fast-check)
+
+Seven property-based tests (`AC-PBT-1` through `AC-PBT-7`) are in `__tests__/lib/risk.test.ts`, verifying structural invariants for `getContractStatus()` and `getRiskColour()` across thousands of randomly generated date and integer combinations. fast-check v4.7.0 is installed as a dev dependency.
+
+Invariants verified: `endDate < today` always returns `expired`; `daysToRenewal ≤ noticePeriodDays` always returns `expiring`/`red`; `daysToRenewal > 60` always returns `active`/`green`; any valid input never throws. Implemented in PR #84 following the full TDD `test:` → `feat:` → `refactor:` sequence.
+
+### Mutation testing (Stryker)
+
+`stryker.config.mjs` is scoped to `lib/risk.ts`. Run locally with `npx stryker run` — intentionally excluded from CI (runtime cost). **Mutation score: 95.65%** (44 killed, 2 survived out of 46 mutants). Both surviving mutants are equivalent: `StringLiteral` mutations swapping `'T00:00:00Z'` for `""` in `getCertificationStatus()`, which produce identical runtime behavior per the ECMAScript spec. Implemented in PR #85.
 
 ---
 
@@ -168,4 +189,6 @@ Role is stored on `profiles.role` and enforced server-side via `lib/auth.ts:requ
 - [Architecture](docs/architecture.md)
 - [Acceptance Criteria](docs/acceptance-criteria.md)
 - [Sprint Plan](docs/sprint-plan.md)
+- [Sprint Retrospectives](docs/sprint-retrospectives.md)
 - [Security](docs/security.md)
+- [Blog Post](https://medium.com/@vineela.vgoli/contracker-40789a7c71ff)
