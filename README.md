@@ -133,6 +133,33 @@ docs/                          → PRD, schema, API design, sprint plan
 
 ---
 
+## Production Database Setup
+
+### First-time setup
+
+The first user to sign up automatically becomes the **admin** — this is enforced by a Postgres trigger on `auth.users` (`handle_new_user` in `supabase/migrations/001_initial_schema.sql`). Every subsequent signup defaults to `member`.
+
+For a clean production launch:
+
+1. Take a backup — Supabase Studio → Database → Backups → on-demand backup.
+2. Create the admin account manually — Studio → Authentication → Users → Add user. Copy the UUID.
+3. Run `supabase/cleanup-production.sql` in Studio → SQL Editor (replace `<YOUR_ADMIN_UUID>` with the real UUID). This script:
+   - Truncates all user-generated rows (`suppliers`, `contracts`, `certifications`, `notifications`)
+   - Deletes every auth user except the admin you created
+   - Promotes that account to `role = 'admin'`
+4. Wipe contract PDFs manually — Studio → Storage → `contract-pdfs` → select all → delete.
+
+### Roles
+
+| Role | Permissions |
+|------|-------------|
+| `admin` | Full CRUD — contracts, suppliers, certifications. Manage team members. |
+| `member` | View all, create/edit contracts and suppliers. No deletes, no team management. |
+
+Role is stored on `profiles.role` and enforced server-side via `lib/auth.ts:requireAdmin()` on every admin-only route. Client-side role gates are UI convenience only.
+
+---
+
 ## Docs
 
 - [Product Requirements](docs/PRD.md)
