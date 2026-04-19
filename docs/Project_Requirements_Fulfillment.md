@@ -4,7 +4,7 @@
 **Team:** Vineela Goli + Raj Laskar  
 **Production URL:** https://contracker-zeta.vercel.app  
 **GitHub Repo:** https://github.com/CS-7180/Contracker  
-**Blog Post:** https://contracker.hashnode.dev/  
+**Blog Post:** https://medium.com/@vineela.vgoli/contracker-40789a7c71ff  
 
 
 ---
@@ -186,7 +186,7 @@ Three sprints were executed across the project:
 Sprint planning is documented in `docs/sprint-plan.md` and `docs/IMPLEMENTATION.md` (Sections 10–11) with milestone tables, task breakdowns, and cut priorities.
 
 **Sprint retrospectives:**
-`[PLACEHOLDER — Add retrospective notes for each sprint to docs/sprint-retrospectives.md covering what went well and what to improve.]`
+Full retrospectives for all three sprints are documented in `docs/sprint-retrospectives.md`, covering what went well and what to improve for each sprint phase. Sprint 2 retrospectives are split by owner — Raj's M2.0–M2.1 portion and Vineela's M2.2–M2.4 portion are documented separately with their own issue lists, PRs, and reflections.
 
 ### GitHub Issues with acceptance criteria
 All Sprint 1–3 features were tracked as GitHub Issues (#1–#32, #52, #55, #57–#81) with acceptance criteria written as testable `AC-XX-N` specifications. ACs map directly to test file assertions in `__tests__/` as documented in `docs/acceptance-criteria.md`.
@@ -208,8 +208,7 @@ Peer evaluation evidence from Vineela and Raj's teams conversation is shown in `
 `README.md` contains a Mermaid system architecture diagram (line 15), three status badges (CI, Deploy, Production) at lines 5–7, the live production URL, local setup instructions, and tech stack summary.
 
 ### Technical blog post
-`[PLACEHOLDER — Insert published blog post URL here: _________________]`
-*(600–1000 words covering what Contracker does, the TDD + Claude Code workflow in practice, one specific insight about AI-assisted development, and links to the GitHub repo and live app. Publish on Medium, dev.to, or similar.)*
+Published on Medium: https://medium.com/@vineela.vgoli/contracker-40789a7c71ff
 
 ### Video demonstration
 `[PLACEHOLDER — Insert video URL here: _________________]`
