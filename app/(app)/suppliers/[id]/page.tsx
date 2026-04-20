@@ -1,11 +1,11 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, Edit2, FileText } from 'lucide-react'
+import { ArrowLeft, Edit2, FileText, ShieldCheck, ShieldAlert, ShieldX, Plus, Award } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { createClient } from '@/lib/supabase/server'
 import { formatDate, formatCurrency } from '@/lib/utils'
-import { getContractStatus, getRiskColour } from '@/lib/risk'
+import { getContractStatus, getRiskColour, getCertificationStatus } from '@/lib/risk'
 import { RiskBadge } from '@/components/ui/RiskBadge'
 
 export default async function SupplierDetailPage({
@@ -17,7 +17,7 @@ export default async function SupplierDetailPage({
 
   // Cast needed: Supabase strict generics don't resolve relational select types correctly.
   const { data: supplier, error } = await (supabase.from('suppliers') as any)
-    .select('*, contracts(*)')
+    .select('*, contracts(*), certifications(*)')
     .eq('id', params.id)
     .single() as {
       data: {
@@ -29,6 +29,7 @@ export default async function SupplierDetailPage({
         contact_email: string | null
         contact_phone: string | null
         contracts: any[]
+        certifications: any[]
       } | null
       error: unknown
     }
@@ -36,6 +37,10 @@ export default async function SupplierDetailPage({
   if (error || !supplier) notFound()
 
   const contracts = supplier.contracts ?? []
+  const certifications = (supplier.certifications ?? []).map((c: any) => ({
+    ...c,
+    certStatus: getCertificationStatus(new Date(c.expiry_date)),
+  }))
 
   // Compute derived stats for the health panel
   const totalValue = contracts.reduce((s: number, c: any) => s + (c.value ?? 0), 0)
@@ -203,6 +208,71 @@ export default async function SupplierDetailPage({
                       </td>
                       <td className="px-4 py-3">
                         <RiskBadge status={status} risk={risk} />
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Certifications */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-foreground">
+            Certifications ({certifications.length})
+          </h3>
+          <Button asChild variant="outline" size="sm">
+            <Link href={`/suppliers/${supplier.id}/certifications/new`}>
+              <Plus className="mr-1.5 h-3.5 w-3.5" />
+              Add Certification
+            </Link>
+          </Button>
+        </div>
+
+        {certifications.length === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.03] py-10 text-center">
+            <Award className="mb-3 h-8 w-8 text-muted-foreground/40" />
+            <p className="text-sm text-muted-foreground">No certifications on file</p>
+            <Button asChild variant="ghost" size="sm" className="mt-3 text-indigo-400">
+              <Link href={`/suppliers/${supplier.id}/certifications/new`}>Add one now</Link>
+            </Button>
+          </div>
+        ) : (
+          <div className="overflow-hidden rounded-xl border border-white/[0.08] bg-white/[0.03]">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-white/[0.06]">
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Type</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Issued</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Expires</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/[0.04]">
+                {certifications.map((c: any) => {
+                  const certStatusConfig = {
+                    valid:    { label: 'Valid',    cls: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20', Icon: ShieldCheck },
+                    expiring: { label: 'Expiring', cls: 'bg-amber-500/15 text-amber-400 border-amber-500/20',   Icon: ShieldAlert },
+                    expired:  { label: 'Expired',  cls: 'bg-red-500/15 text-red-400 border-red-500/20',         Icon: ShieldX },
+                  }[c.certStatus as 'valid' | 'expiring' | 'expired']
+
+                  return (
+                    <tr key={c.id} className="transition-colors hover:bg-white/[0.03]">
+                      <td className="px-4 py-3 font-medium text-foreground capitalize">
+                        {c.cert_type === 'insurance' ? 'Insurance' : c.cert_type}
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">
+                        {c.issued_date ? formatDate(c.issued_date) : '—'}
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">{formatDate(c.expiry_date)}</td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium ${certStatusConfig.cls}`}>
+                          <certStatusConfig.Icon className="h-3 w-3" />
+                          {certStatusConfig.label}
+                        </span>
                       </td>
                     </tr>
                   )
