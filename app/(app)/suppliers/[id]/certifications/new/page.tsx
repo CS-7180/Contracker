@@ -72,6 +72,7 @@ export default function NewCertificationPage() {
 
       toast({ title: 'Certification added' })
       router.push(`/suppliers/${supplierId}`)
+      router.refresh()
     } catch {
       setError('Network error — please try again.')
     } finally {
