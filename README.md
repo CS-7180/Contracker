@@ -6,9 +6,9 @@ Contract & Supplier Management Platform built with Next.js 14, Supabase, and dep
 [![Deploy](https://github.com/CS-7180/Contracker/actions/workflows/deploy.yml/badge.svg)](https://github.com/CS-7180/Contracker/actions/workflows/deploy.yml)
 [![Production](https://img.shields.io/badge/production-live-brightgreen)](https://contracker-zeta.vercel.app/)
 
-> **Live app:** [https://contracker-zeta.vercel.app](https://contracker-zeta.vercel.app)
-> **Blog post:** [Building Contracker with TDD + Claude Code](https://medium.com/@vineela.vgoli/contracker-40789a7c71ff)
-> **Demo video:** [https://youtu.be/bnh0SqMpClo](https://youtu.be/bnh0SqMpClo)
+> **Live app:** [https://contracker-zeta.vercel.app](https://contracker-zeta.vercel.app)  
+> **Blog post:** [Building Contracker with TDD + Claude Code](https://medium.com/@vineela.vgoli/contracker-40789a7c71ff)  
+> **Demo video:** [https://youtu.be/bnh0SqMpClo](https://youtu.be/bnh0SqMpClo)  
 
 > [!NOTE]
 > **CS7180 Project Deliverables** — The full requirements fulfillment checklist (CLAUDE.md, skills, hooks, MCP servers, agents, TDD evidence, CI/CD pipeline, and bonus work) is documented in [`docs/Project_Requirements_Fulfillment.md`](docs/Project_Requirements_Fulfillment.md).
