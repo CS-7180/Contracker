@@ -211,11 +211,7 @@ Peer evaluation evidence from Vineela and Raj's teams conversation is shown in `
 Published on Medium: https://medium.com/@vineela.vgoli/contracker-40789a7c71ff
 
 ### Video demonstration
-`[PLACEHOLDER — Insert video URL here: _________________]`
-*(5–10 min screencast covering: problem statement, live walkthrough of all 8 pages, Claude Code workflow showing CLAUDE.md + a TDD commit sequence + a C.L.E.A.R. PR review, CI/CD all-green view, and closing.)*
-
-### Showcase form submission
-`[PLACEHOLDER — Submit the Google Form before Apr 22 by 2:59am: project name (Contracker), production URL, thumbnail, video URL, blog URL. Form: https://docs.google.com/forms/d/e/1FAIpQLScT67tnwjhIETSRwADt57TS_THJSeSGf-xrjTV2nm-XvfFELg/viewform?usp=dialog]`
+`[[Demo](https://youtu.be/bnh0SqMpClo)]`
 
 ---
 
