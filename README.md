@@ -9,7 +9,7 @@ Contract & Supplier Management Platform built with Next.js 14, Supabase, and dep
 > **Live app:** [https://contracker-zeta.vercel.app](https://contracker-zeta.vercel.app)  
 > **Blog post:** [Building Contracker with TDD + Claude Code](https://medium.com/@vineela.vgoli/contracker-40789a7c71ff)  
 > **Demo video:** [https://youtu.be/bnh0SqMpClo](https://youtu.be/bnh0SqMpClo)  
-
+> **API Docs:** [https://contracker-zeta.vercel.app/api-docs](https://contracker-zeta.vercel.app/api-docs)  
 > [!NOTE]
 > **CS7180 Project Deliverables** — The full requirements fulfillment checklist (CLAUDE.md, skills, hooks, MCP servers, agents, TDD evidence, CI/CD pipeline, and bonus work) is documented in [`docs/Project_Requirements_Fulfillment.md`](docs/Project_Requirements_Fulfillment.md).
 
